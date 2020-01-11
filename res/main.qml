@@ -8,6 +8,7 @@ Rectangle {
 
     BackEnd {
         id: backEnd
+        onTimeChanged: (seconds) => currentDuration.text = seconds
     }
 
     ColumnLayout {
@@ -19,6 +20,15 @@ Rectangle {
             Text {
                 id: timerLabel
                 text: "Current Session"
+                font.pixelSize: 12
+                horizontalAlignment: Text.AlignHCenter
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            }
+
+            Text {
+                id: currentDuration
+                text: "0 hrs 00 m"
                 font.weight: Font.Bold
                 horizontalAlignment: Text.AlignHCenter
                 Layout.fillWidth: true
@@ -27,13 +37,34 @@ Rectangle {
         }
 
         Button {
+            id: startButton
             text: "Start Timer"
             width: 300
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             onClicked: {
-                let val = backEnd.startTimer();
-                txt.text = val.toString();
+                let running = backEnd.isRunning();
+                if (running) {
+                    backEnd.pauseTimer()
+                    startButton.text = "Start Timer"
+                } else {
+                    backEnd.startTimer(activity.text,task.text);
+                    startButton.text = "Pause Timer"
+                }
             }
+        }
+
+        TextInput {
+            id: activity
+            text: ""
+            cursorVisible: true
+            width: 100
+        }
+
+        TextInput {
+            id: task
+            text: ""
+            cursorVisible: true
+            width: 100
         }
     }
 }

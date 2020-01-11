@@ -9,6 +9,7 @@ moc-*
 *.h
 *.cpp
 .qamel*
+tempus
 ./tempus
 tempus.json
 
