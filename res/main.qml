@@ -44,10 +44,10 @@ Rectangle {
             onClicked: {
                 let running = backEnd.isRunning();
                 if (running) {
-                    backEnd.pauseTimer()
+                    backEnd.pause()
                     startButton.text = "Start Timer"
                 } else {
-                    backEnd.startTimer(activity.text,task.text);
+                    backEnd.start(activity.text,task.text);
                     startButton.text = "Pause Timer"
                 }
             }

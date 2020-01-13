@@ -2,63 +2,57 @@ package backend
 
 import (
 	"fmt"
+	"tempus/pkg/activity"
 	"time"
 
 	"github.com/go-qamel/qamel"
 )
 
-var state model
-
-func init() {
-	state = model{false, time.Now(), time.Now(), "", []string{}, make(chan int)}
-}
-
-type model struct {
-	is_running bool
-	start      time.Time
-	end        time.Time
-	activity   string
-	tasks      []string
-	stopper    chan int
-}
+// func init() {
+// 	state = model{false, time.Now(), time.Now(), "", []string{}, make(chan int)}
+// }
 
 // BackEnd is the bridge for communicating between QML and Go
 type BackEnd struct {
 	qamel.QmlObject
 	_ func(string)         `signal:"timeChanged"`
-	_ func(string, string) `slot:"startTimer"`
-	_ func()               `slot:"pauseTimer"`
+	_ func(string, string) `slot:"start"`
+	_ func()               `slot:"pause"`
 	_ func() bool          `slot:"isRunning"`
+
+	is_running bool
+	timer      activity.Timer
+	stopper    chan int
 }
 
+// func (b *BackEnd) isRunning() bool {
+// 	return false
+// }
 func (b *BackEnd) isRunning() bool {
-	return state.is_running
+	return b.is_running
 }
 
-func (b *BackEnd) startTimer(activity, task string) {
+func (b *BackEnd) start(activity_name, task string) {
 
-	state.activity = activity
-	state.tasks = append(state.tasks, task)
-	state.start = time.Now()
-	state.is_running = true
+	b.timer = activity.NewTimer(activity_name, task)
+	b.is_running = true
+	b.stopper = make(chan int)
 
-	// a := activity.ActivitySpan{task, time.Now(), time.Now(), nil}
-	fmt.Println(state)
+	// // a := activity.ActivitySpan{task, time.Now(), time.Now(), nil}
+	fmt.Println(b.timer)
 
 	go func() {
-		var t time.Duration = time.Second * 0
 		for {
 			select {
-			case <-state.stopper:
-				state.is_running = false
+			case <-b.stopper:
+				b.is_running = false
 				fmt.Println("Stopping")
 				return
 			default:
-				// now := time.Now().Format("15:04:05")
-				// b.timeChanged(now)
 				time.Sleep(time.Second)
-				t = t + time.Second
-				fmt.Println(int(t.Seconds()))
+				b.timer.UpdateDuration()
+				fmt.Println(b.timer)
+				t := b.timer.GetDuration()
 				b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes()), int(t.Seconds())))
 
 			}
@@ -66,9 +60,10 @@ func (b *BackEnd) startTimer(activity, task string) {
 	}()
 }
 
-func (b *BackEnd) pauseTimer() {
+func (b *BackEnd) pause() {
 	// a := activity.ActivitySpan{task, time.Now(), time.Now(), nil}
-	state.stopper <- 1
+	fmt.Println("Pausing")
 
-	fmt.Println(state)
+	b.timer.Pause()
+	b.stopper <- 1
 }

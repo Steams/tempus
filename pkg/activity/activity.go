@@ -2,49 +2,63 @@ package activity
 
 import "time"
 
-type ActivitySpan struct {
-	Name  string
-	Start time.Time
-	End   time.Time
-	Tasks []TaskSpan
+type task struct {
+	name  string
+	start time.Time
+	end   time.Time
 }
 
-type TaskSpan struct {
-	Name  string
-	Start string
-	End   string
-}
-
-type ActivityStarter struct {
+type task_starter struct {
 	name  string
 	start time.Time
 }
 
-// func StartTimer(activity,task string) {
-// 	// var t time.Duration
-// 	// t = 0 60 * time.Second
+func (t task_starter) end() task {
+	return task{t.name, t.start, time.Now()}
+}
 
-// 	a := activity.ActivitySpan{task, time.Now(), time.Now(), nil}
+type Timer interface {
+	Pause()
+	Continue()
+	NewTask(string)
+	UpdateDuration()
+	GetDuration() time.Duration
+}
 
-// 	fmt.Println(a)
+type timer_impl struct {
+	activity     string
+	tasks        []task
+	current_task task_starter
+	duration     time.Duration
+	paused       bool
+}
 
-// 	go func() {
-// 		for {
-// 			// now := time.Now().Format("15:04:05")
-// 			// b.timeChanged(now)
-// 			time.Sleep(time.Second)
-// 			t = t + time.Second
+func NewTimer(activity, task_name string) Timer {
+	return &timer_impl{
+		activity:     activity,
+		tasks:        []task{},
+		current_task: task_starter{task_name, time.Now()},
+		duration:     (0 * time.Second),
+		paused:       false,
+	}
+}
 
-// 			fmt.Println(int(t.Seconds()))
-// 			b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes()), int(t.Seconds())))
-// 		}
-// 	}()
-// }
+func (t *timer_impl) UpdateDuration() {
+	t.duration = t.duration + (1 * time.Second)
+}
 
-// func PauseTimer() {
+func (t *timer_impl) Pause() {
+	t.tasks = append(t.tasks, t.current_task.end())
+}
 
-// }
+func (t *timer_impl) Continue() {
+}
 
-// func UpdateTask() {
+func (t *timer_impl) GetDuration() time.Duration {
+	return t.duration
+}
 
-// }
+func (t *timer_impl) NewTask(task_name string) {
+	t.tasks = append(t.tasks, t.current_task.end())
+	t.current_task = task_starter{task_name, time.Now()}
+}
