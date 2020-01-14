@@ -42,14 +42,7 @@ Rectangle {
             width: 300
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             onClicked: {
-                let running = backEnd.isRunning();
-                if (running) {
-                    backEnd.pause()
-                    startButton.text = "Start Timer"
-                } else {
-                    backEnd.start(activity.text,task.text);
-                    startButton.text = "Pause Timer"
-                }
+                startButton.text = backEnd.toggleStart(activity.text,task.text)
             }
         }
 
@@ -59,6 +52,11 @@ Rectangle {
             cursorVisible: true
             width: 100
         }
+
+        /* ComboBox { */
+        /*     width: 200 */
+        /*     model: [ "Work", "Reading", "Project" ] */
+        /* } */
 
         TextInput {
             id: task
