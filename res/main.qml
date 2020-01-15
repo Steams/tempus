@@ -1,22 +1,24 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.5
-import BackEnd 1.0
+import Backend 1.0
 
 Rectangle {
     color: "white"
 
-    BackEnd {
-        id: backEnd
-        onTimeChanged: (seconds) => currentDuration.text = seconds
+    Backend {
+        id: backend
+        onTimeChanged : (seconds) => currentDuration.text = seconds
+        onSignalPause       : ()        => startButton.text = "Continue Timer"
+        onSignalStop        : ()        => startButton.text = "Start Timer"
+        onSignalStart       : ()        => startButton.text = "Pause Timer"
     }
 
     ColumnLayout {
         spacing: 20
-        anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
 
-        ColumnLayout {
+        RowLayout {
             Text {
                 id: timerLabel
                 text: "Current Session"
@@ -42,7 +44,7 @@ Rectangle {
             width: 300
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
             onClicked: {
-                startButton.text = backEnd.toggleStart(activity.text,task.text)
+                backend.toggleStart(activity.text,task.text)
             }
         }
 
@@ -51,18 +53,21 @@ Rectangle {
             text: ""
             cursorVisible: true
             width: 100
+            Keys.onReturnPressed: {
+                backend.changeActivity(activity.text)
+            }
         }
-
-        /* ComboBox { */
-        /*     width: 200 */
-        /*     model: [ "Work", "Reading", "Project" ] */
-        /* } */
 
         TextInput {
             id: task
             text: ""
             cursorVisible: true
             width: 100
+            height: 40
+            /* Keys.onReturnPressed: { */
+            /*     backend.changeActivity(activity.text) */
+            /* } */
         }
+
     }
 }

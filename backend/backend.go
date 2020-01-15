@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"os"
 	"tempus/pkg/activity"
 	activity_repo "tempus/pkg/activity/sqlite_repo"
 
@@ -17,7 +18,10 @@ import (
 var repo activity.Repository
 
 func init() {
+	os.Remove("/home/steams/Development/tempus/tempus.db")
+
 	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+
 	if err != nil {
 		panic(err)
 	}
@@ -26,11 +30,14 @@ func init() {
 	repo = activity_repo.New(db)
 }
 
-type BackEnd struct {
+type Backend struct {
 	qamel.QmlObject
-	_ func(string)                `signal:"timeChanged"`
-	_ func() bool                 `slot:"isRunning"`
-	_ func(string, string) string `slot:"toggleStart"`
+	_ func(string)         `signal:"timeChanged"`
+	_ func()               `signal:"signalPause"`
+	_ func()               `signal:"signalStop"`
+	_ func()               `signal:"signalStart"`
+	_ func(string, string) `slot:"toggleStart"`
+	_ func(string)         `slot:"changeActivity"`
 
 	is_running bool
 	is_paused  bool
@@ -38,28 +45,30 @@ type BackEnd struct {
 	stopper    chan int
 }
 
-func (b *BackEnd) isRunning() bool {
-	return b.is_running
+func (b *Backend) changeActivity(name string) {
+	b.pause()
+	b.is_paused = false
+	b.signalStop()
 }
 
-func (b *BackEnd) toggleStart(act_name, task_name string) string {
+func (b *Backend) toggleStart(act_name, task_name string) {
 	if b.is_paused {
 		b.cont()
-		return "Pause Timer"
+		b.signalStart()
 	}
 
 	if b.is_running {
 		b.pause()
 		b.is_paused = true
-		return "Continue Timer"
+		b.signalPause()
 	}
 
 	b.start(act_name, task_name)
-	return "Pause Timer"
+	b.signalStart()
 
 }
 
-func (b *BackEnd) start(activity_name, task string) {
+func (b *Backend) start(activity_name, task string) {
 
 	b.timer = activity.NewTimer(activity_name, task, repo)
 	b.is_running = true
@@ -70,7 +79,7 @@ func (b *BackEnd) start(activity_name, task string) {
 	go b.runTimer()
 }
 
-func (b *BackEnd) pause() {
+func (b *Backend) pause() {
 	fmt.Println("Pausing")
 
 	b.timer.Pause()
@@ -78,12 +87,12 @@ func (b *BackEnd) pause() {
 	b.is_running = false
 }
 
-func (b *BackEnd) cont() {
+func (b *Backend) cont() {
 	go b.runTimer()
 	b.is_paused = false
 }
 
-func (b *BackEnd) runTimer() {
+func (b *Backend) runTimer() {
 	for {
 		select {
 		case <-b.stopper:
