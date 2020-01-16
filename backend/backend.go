@@ -2,7 +2,6 @@ package backend
 
 import (
 	"fmt"
-	"os"
 	"tempus/pkg/activity"
 	activity_repo "tempus/pkg/activity/sqlite_repo"
 
@@ -18,7 +17,7 @@ import (
 var service activity.Service
 
 func init() {
-	os.Remove("/home/steams/Development/tempus/tempus.db")
+	// os.Remove("/home/steams/Development/tempus/tempus.db")
 
 	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
 
@@ -26,11 +25,10 @@ func init() {
 		panic(err)
 	}
 
-	db.MustExec(activity_repo.Schema)
+	// db.MustExec(activity_repo.Schema)
 	repo := activity_repo.New(db)
 
-	service := activity.CreateService(repo)
-
+	service = activity.CreateService(repo)
 }
 
 type Backend struct {
@@ -39,10 +37,10 @@ type Backend struct {
 	_ func()               `signal:"signalPause"`
 	_ func()               `signal:"signalStop"`
 	_ func()               `signal:"signalStart"`
-	_ func()               `signal:"updateList"`
+	_ func(string, string) `signal:"updateList"`
 	_ func(string, string) `slot:"toggleStart"`
 	_ func(string)         `slot:"changeActivity"`
-	_ func(string)         `slot:"load"`
+	_ func()               `slot:"load"`
 
 	is_running bool
 	is_paused  bool
@@ -51,18 +49,22 @@ type Backend struct {
 }
 
 func (b *Backend) load() {
-	t := activity.NewTimer("Working", "Reading the docs", repo)
-	time.Sleep(time.Second * 3)
-	t.Pause()
-	time.Sleep(time.Second * 3)
-	t.Continue()
-	t.NewTask("Building out load balancer")
-	time.Sleep(time.Second * 3)
-	t.Pause()
+	// t := service.NewTimer("Working", "Reading the docs")
+	// time.Sleep(time.Second * 3)
+	// fmt.Println("1")
+	// t.Pause()
+	// time.Sleep(time.Second * 3)
+	// fmt.Println("2")
+	// t.Continue()
+	// t.NewTask("Building out load balancer")
+	// time.Sleep(time.Second * 3)
+	// fmt.Println("3")
+	// t.Pause()
 
-	stuff := activity.GetTasks()
-	for x := range stuff {
-		b.updateList(x.activity, x.name)
+	stuff := service.GetTasks()
+	fmt.Println(stuff)
+	for _, x := range stuff {
+		b.updateList(x.Act_name, x.Name)
 	}
 }
 
@@ -93,7 +95,7 @@ func (b *Backend) toggleStart(act_name, task_name string) {
 
 func (b *Backend) start(activity_name, task string) {
 
-	b.timer = activity.NewTimer(activity_name, task, repo)
+	b.timer = service.NewTimer(activity_name, task)
 	b.is_running = true
 	b.stopper = make(chan int)
 

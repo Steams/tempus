@@ -1,6 +1,7 @@
 package sqlite_repo
 
 import (
+	"fmt"
 	"log"
 	"tempus/pkg/activity"
 
@@ -12,16 +13,17 @@ import (
 
 type Repository = activity.Repository
 type Task = activity.Task
+type DomainTask = activity.DomainTask
 
 const Schema = `
 CREATE TABLE activity_session (
     id text,
-    name text,
+    name text
 );
 CREATE TABLE task_session (
     id text,
     name text,
-    activity_session_id text,
+    activity_session_id text
 );
 CREATE TABLE task (
     name text,
@@ -29,7 +31,7 @@ CREATE TABLE task (
     start datetime,
     end datetime,
     duration integer,
-    task_session_id,
+    task_session_id
 );
 `
 
@@ -78,11 +80,12 @@ func (r repository) NewTaskSession(name, activity_id string) string {
 	}
 	id := uuid.New().String()
 	stmt.MustExec(id, name, activity_id)
+	return id
 }
 
 func (r repository) GetTasks() []DomainTask {
-
-	rows, err := r.db.Queryx("Select task_session.id,task_session.name, activity_session.name FROM task_session INNER JOIN activity_session ON task_session.activity_session_id = activity_session.id")
+	// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
+	rows, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id")
 
 	if err != nil {
 		log.Fatalln(err)
@@ -96,6 +99,8 @@ func (r repository) GetTasks() []DomainTask {
 		if err != nil {
 			log.Fatalln(err)
 		}
+		fmt.Printf("%+v\n", m)
+
 		tasks = append(tasks, m)
 	}
 

@@ -18,9 +18,6 @@ Rectangle {
     ColumnLayout {
         spacing: 20
         anchors.horizontalCenter: parent.horizontalCenter
-        onCompleted: {
-            backend.load();
-        }
 
         RowLayout {
             Text {
@@ -78,7 +75,8 @@ Rectangle {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        backend.toggleStart(activity.currentText,task.text)
+                        /* backend.toggleStart(activity.currentText,task.text) */
+                        backend.load();
                     }
                 }
             }
@@ -89,9 +87,6 @@ Rectangle {
         Repeater {
             model: ListModel {
                 id: tasksList
-
-                ListElement {activityName: "Working"; taskName: "reading docs" }
-                ListElement {activityName: "Side Project"; taskName: "building db model" }
             }
 
             RowLayout {
