@@ -15,7 +15,7 @@ import (
 	"github.com/go-qamel/qamel"
 )
 
-var repo activity.Repository
+var service activity.Service
 
 func init() {
 	os.Remove("/home/steams/Development/tempus/tempus.db")
@@ -27,7 +27,10 @@ func init() {
 	}
 
 	db.MustExec(activity_repo.Schema)
-	repo = activity_repo.New(db)
+	repo := activity_repo.New(db)
+
+	service := activity.CreateService(repo)
+
 }
 
 type Backend struct {
@@ -36,13 +39,31 @@ type Backend struct {
 	_ func()               `signal:"signalPause"`
 	_ func()               `signal:"signalStop"`
 	_ func()               `signal:"signalStart"`
+	_ func()               `signal:"updateList"`
 	_ func(string, string) `slot:"toggleStart"`
 	_ func(string)         `slot:"changeActivity"`
+	_ func(string)         `slot:"load"`
 
 	is_running bool
 	is_paused  bool
 	timer      activity.Timer
 	stopper    chan int
+}
+
+func (b *Backend) load() {
+	t := activity.NewTimer("Working", "Reading the docs", repo)
+	time.Sleep(time.Second * 3)
+	t.Pause()
+	time.Sleep(time.Second * 3)
+	t.Continue()
+	t.NewTask("Building out load balancer")
+	time.Sleep(time.Second * 3)
+	t.Pause()
+
+	stuff := activity.GetTasks()
+	for x := range stuff {
+		b.updateList(x.activity, x.name)
+	}
 }
 
 func (b *Backend) changeActivity(name string) {
@@ -55,12 +76,14 @@ func (b *Backend) toggleStart(act_name, task_name string) {
 	if b.is_paused {
 		b.cont()
 		b.signalStart()
+		return
 	}
 
 	if b.is_running {
 		b.pause()
-		b.is_paused = true
 		b.signalPause()
+		b.is_paused = true
+		return
 	}
 
 	b.start(act_name, task_name)
@@ -90,6 +113,7 @@ func (b *Backend) pause() {
 func (b *Backend) cont() {
 	go b.runTimer()
 	b.is_paused = false
+	b.timer.Continue()
 }
 
 func (b *Backend) runTimer() {

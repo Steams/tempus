@@ -9,14 +9,18 @@ Rectangle {
     Backend {
         id: backend
         onTimeChanged : (seconds) => currentDuration.text = seconds
-        onSignalPause       : ()        => startButton.text = "Continue Timer"
-        onSignalStop        : ()        => startButton.text = "Start Timer"
-        onSignalStart       : ()        => startButton.text = "Pause Timer"
+        onSignalStop        : ()        => startButton.source = "play.png"
+        onSignalStart       : ()        => startButton.source = "pause.png"
+        onSignalPause       : ()        => startButton.source = "play.png"
+        onUpdateList        : (act,tsk) => tasksList.append({"activityName":act,"taskName":tsk})
     }
 
     ColumnLayout {
         spacing: 20
         anchors.horizontalCenter: parent.horizontalCenter
+        onCompleted: {
+            backend.load();
+        }
 
         RowLayout {
             Text {
@@ -38,35 +42,68 @@ Rectangle {
             }
         }
 
-        Button {
-            id: startButton
-            text: "Start Timer"
-            width: 300
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            onClicked: {
-                backend.toggleStart(activity.text,task.text)
-            }
-        }
+        RowLayout {
 
-        TextInput {
-            id: activity
-            text: ""
-            cursorVisible: true
-            width: 100
-            Keys.onReturnPressed: {
-                backend.changeActivity(activity.text)
-            }
-        }
-
-        TextInput {
-            id: task
-            text: ""
-            cursorVisible: true
-            width: 100
-            height: 40
-            /* Keys.onReturnPressed: { */
-            /*     backend.changeActivity(activity.text) */
+            /* TextInput { */
+            /*     id: activity */
+            /*     text: "" */
+            /*     cursorVisible: true */
+            /*     width: 100 */
+            /*     Keys.onReturnPressed: { */
+            /*         backend.changeActivity(activity.text) */
+            /*     } */
             /* } */
+            ComboBox {
+                width: 200
+                model: [ "Work", "Project", "Reading" ]
+                id: activity
+            }
+
+            TextInput {
+                id: task
+                text: ""
+                cursorVisible: true
+                width: 100
+                height: 40
+                /* Keys.onReturnPressed: { */
+                /*     backend.changeActivity(activity.text) */
+                /* } */
+            }
+
+
+            Image {
+                id: startButton
+                source: "play.png"
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        backend.toggleStart(activity.currentText,task.text)
+                    }
+                }
+            }
+
+
+        }
+
+        Repeater {
+            model: ListModel {
+                id: tasksList
+
+                ListElement {activityName: "Working"; taskName: "reading docs" }
+                ListElement {activityName: "Side Project"; taskName: "building db model" }
+            }
+
+            RowLayout {
+                TextInput {
+                    text: activityName
+                }
+
+                TextInput {
+                    text: taskName
+                }
+            }
+
         }
 
     }
