@@ -213,7 +213,7 @@ ColumnLayout {
                         Layout.leftMargin: 30
 
                         Text {
-                            text: start
+                            text: (start + " - " + end)
                         }
                         Text {
                             text: duration

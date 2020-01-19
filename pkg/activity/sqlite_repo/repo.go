@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"tempus/pkg/activity"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -28,8 +29,8 @@ CREATE TABLE task_session (
 CREATE TABLE task (
     name text,
     activity_name text,
-    start datetime,
-    end datetime,
+    start integer,
+    end integer,
     duration integer,
     task_session_id
 );
@@ -49,7 +50,7 @@ func (r repository) AddTask(task Task, session_id string) {
 	if err != nil {
 		panic(err)
 	}
-	stmt.MustExec(task.Name, task.Start.String(), task.End.String(), task.End.Sub(task.Start), session_id)
+	stmt.MustExec(task.Name, task.Start.Unix(), task.End.Unix(), task.End.Sub(task.Start), session_id)
 }
 
 func (r repository) NewActivitySession(activity string) string {
@@ -80,6 +81,12 @@ type TaskSessionScanner struct {
 	Act_name string
 }
 
+type TaskScanner struct {
+	Name  string
+	Start int64
+	End   int64
+}
+
 func (r repository) GetTasks() []TaskSession {
 	// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
 	session_results, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id")
@@ -105,7 +112,7 @@ func (r repository) GetTasks() []TaskSession {
 		task_results, err := r.db.Queryx("SELECT name,start,end FROM task WHERE task_session_id = $1", session.Id)
 
 		for task_results.Next() {
-			task := Task{}
+			task := TaskScanner{}
 
 			err := task_results.StructScan(&task)
 
@@ -113,7 +120,7 @@ func (r repository) GetTasks() []TaskSession {
 				log.Fatalln(err)
 			}
 			fmt.Printf("%+v\n", task)
-			tasks = append(tasks, task)
+			tasks = append(tasks, Task{task.Name, time.Unix(task.Start, 0), time.Unix(task.End, 0)})
 		}
 
 		sessions = append(sessions, TaskSession{session.Id, session.Name, session.Act_name, tasks})

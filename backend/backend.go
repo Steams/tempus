@@ -16,8 +16,10 @@ import (
 )
 
 var service activity.Service
+var time_layout string
 
 func init() {
+	time_layout = "03:04PM"
 	os.Remove("/home/steams/Development/tempus/tempus.db")
 
 	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
@@ -55,7 +57,7 @@ func (b *Backend) dispatchListUpdate() {
 	stuff := service.GetTasks()
 	fmt.Println(stuff)
 	for _, x := range stuff {
-		b.updateList(x.Act_name, x.Name, x.Tasks[0].Start.String(), x.Tasks[0].End.String(), x.Tasks[0].End.Sub(x.Tasks[0].Start).String())
+		b.updateList(x.Act_name, x.Name, x.Tasks[0].Start.Format(time_layout), x.Tasks[0].End.Format(time_layout), x.Tasks[0].End.Sub(x.Tasks[0].Start).String())
 	}
 }
 
