@@ -13,7 +13,7 @@ import (
 
 type Repository = activity.Repository
 type Task = activity.Task
-type DomainTask = activity.DomainTask
+type TaskSession = activity.TaskSession
 
 const Schema = `
 CREATE TABLE activity_session (
@@ -43,22 +43,13 @@ type repository struct {
 	db *sqlx.DB
 }
 
-func (r repository) Add(task Task, activity string) {
-
-	stmt, err := r.db.Preparex("INSERT INTO task(name, start, end, activity) values(?,?,?,?)")
-	if err != nil {
-		panic(err)
-	}
-	stmt.MustExec(task.Name, task.Start.String(), task.End.String(), activity)
-}
-
 func (r repository) AddTask(task Task, session_id string) {
 
-	stmt, err := r.db.Preparex("INSERT INTO task(name, start, end, task_session_id) values(?,?,?,?)")
+	stmt, err := r.db.Preparex("INSERT INTO task(name, start, end, duration, task_session_id) values(?,?,?,?,?)")
 	if err != nil {
 		panic(err)
 	}
-	stmt.MustExec(task.Name, task.Start.String(), task.End.String(), session_id)
+	stmt.MustExec(task.Name, task.Start.String(), task.End.String(), task.End.Sub(task.Start), session_id)
 }
 
 func (r repository) NewActivitySession(activity string) string {
@@ -83,31 +74,55 @@ func (r repository) NewTaskSession(name, activity_id string) string {
 	return id
 }
 
-func (r repository) GetTasks() []DomainTask {
+type TaskSessionScanner struct {
+	Id       string
+	Name     string
+	Act_name string
+}
+
+func (r repository) GetTasks() []TaskSession {
 	// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
-	rows, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id")
+	session_results, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id")
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	m := DomainTask{}
-	var tasks []DomainTask
+	sessions := []TaskSession{}
 
-	for rows.Next() {
-		err := rows.StructScan(&m)
+	for session_results.Next() {
+		session := TaskSessionScanner{}
+
+		err := session_results.StructScan(&session)
+
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("%+v\n", m)
+		fmt.Printf("%+v\n", session)
 
-		tasks = append(tasks, m)
+		tasks := []Task{}
+
+		task_results, err := r.db.Queryx("SELECT name,start,end FROM task WHERE task_session_id = $1", session.Id)
+
+		for task_results.Next() {
+			task := Task{}
+
+			err := task_results.StructScan(&task)
+
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Printf("%+v\n", task)
+			tasks = append(tasks, task)
+		}
+
+		sessions = append(sessions, TaskSession{session.Id, session.Name, session.Act_name, tasks})
 	}
 
-	if tasks == nil {
-		tasks = make([]DomainTask, 0)
-		return tasks
+	if sessions == nil {
+		sessions = make([]TaskSession, 0)
+		return sessions
 	}
 
-	return tasks
+	return sessions
 }

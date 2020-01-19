@@ -2,6 +2,7 @@ package backend
 
 import (
 	"fmt"
+	"os"
 	"tempus/pkg/activity"
 	activity_repo "tempus/pkg/activity/sqlite_repo"
 
@@ -17,7 +18,7 @@ import (
 var service activity.Service
 
 func init() {
-	// os.Remove("/home/steams/Development/tempus/tempus.db")
+	os.Remove("/home/steams/Development/tempus/tempus.db")
 
 	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
 
@@ -25,7 +26,7 @@ func init() {
 		panic(err)
 	}
 
-	// db.MustExec(activity_repo.Schema)
+	db.MustExec(activity_repo.Schema)
 	repo := activity_repo.New(db)
 
 	service = activity.CreateService(repo)
@@ -33,14 +34,16 @@ func init() {
 
 type Backend struct {
 	qamel.QmlObject
-	_ func(string)         `signal:"timeChanged"`
-	_ func()               `signal:"signalPause"`
-	_ func()               `signal:"signalStop"`
-	_ func()               `signal:"signalStart"`
-	_ func(string, string) `signal:"updateList"`
-	_ func(string, string) `slot:"toggleStart"`
-	_ func(string)         `slot:"changeActivity"`
-	_ func()               `slot:"load"`
+	_ func(string)                                 `signal:"timeChanged"`
+	_ func()                                       `signal:"signalPause"`
+	_ func()                                       `signal:"signalStop"`
+	_ func()                                       `signal:"signalStart"`
+	_ func(string, string, string, string, string) `signal:"updateList"`
+	_ func()                                       `signal:"clearList"`
+	_ func(string, string)                         `slot:"toggleStart"`
+	_ func()                                       `slot:"changeActivity"`
+	_ func(string)                                 `slot:"changeTask"`
+	_ func()                                       `slot:"load"`
 
 	is_running bool
 	is_paused  bool
@@ -48,45 +51,57 @@ type Backend struct {
 	stopper    chan int
 }
 
-func (b *Backend) load() {
-	// t := service.NewTimer("Working", "Reading the docs")
-	// time.Sleep(time.Second * 3)
-	// fmt.Println("1")
-	// t.Pause()
-	// time.Sleep(time.Second * 3)
-	// fmt.Println("2")
-	// t.Continue()
-	// t.NewTask("Building out load balancer")
-	// time.Sleep(time.Second * 3)
-	// fmt.Println("3")
-	// t.Pause()
-
+func (b *Backend) dispatchListUpdate() {
 	stuff := service.GetTasks()
 	fmt.Println(stuff)
 	for _, x := range stuff {
-		b.updateList(x.Act_name, x.Name)
+		b.updateList(x.Act_name, x.Name, x.Tasks[0].Start.String(), x.Tasks[0].End.String(), x.Tasks[0].End.Sub(x.Tasks[0].Start).String())
 	}
 }
 
-func (b *Backend) changeActivity(name string) {
-	b.pause()
-	b.is_paused = false
-	b.signalStop()
+func (b *Backend) load() {
+	b.dispatchListUpdate()
+}
+
+func (b *Backend) changeActivity() {
+
+	if b.is_paused {
+		b.is_running = false
+
+		b.dispatchListUpdate()
+
+		b.signalStop()
+
+		return
+	}
+	if b.is_running {
+		b.stop()
+	}
+}
+
+func (b *Backend) changeTask(name string) {
+	b.timer.NewTask(name)
+
+	b.clearList()
+	b.dispatchListUpdate()
 }
 
 func (b *Backend) toggleStart(act_name, task_name string) {
 	if b.is_paused {
+		fmt.Println("is paused, now continue")
 		b.cont()
 		b.signalStart()
 		return
 	}
 
 	if b.is_running {
+		fmt.Println("is running, now pause")
 		b.pause()
 		b.signalPause()
-		b.is_paused = true
 		return
 	}
+
+	fmt.Println("is stop, now start")
 
 	b.start(act_name, task_name)
 	b.signalStart()
@@ -109,7 +124,18 @@ func (b *Backend) pause() {
 
 	b.timer.Pause()
 	b.stopper <- 1
+	b.is_paused = true
+}
+
+func (b *Backend) stop() {
+	fmt.Println("Stopping")
+	b.timer.Pause()
+	b.stopper <- 1
+	b.is_paused = false
 	b.is_running = false
+
+	b.dispatchListUpdate()
+	b.signalStop()
 }
 
 func (b *Backend) cont() {

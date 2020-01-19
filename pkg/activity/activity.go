@@ -4,14 +4,14 @@ import "time"
 
 type Service interface {
 	NewTimer(act_name, task_name string) Timer
-	GetTasks() []DomainTask
+	GetTasks() []TaskSession
 }
 
 type Repository interface {
 	AddTask(task Task, session_id string)
 	NewActivitySession(name string) string
 	NewTaskSession(name, activity_id string) string
-	GetTasks() []DomainTask
+	GetTasks() []TaskSession
 }
 
 type Timer interface {
@@ -20,14 +20,6 @@ type Timer interface {
 	NewTask(string)
 	UpdateDuration()
 	GetDuration() time.Duration
-}
-
-type DomainTask struct {
-	Id       string
-	Name     string
-	Act_name string
-	// Start    string
-	// End      string
 }
 
 type Task struct {
@@ -42,8 +34,10 @@ type ActivitySession struct {
 }
 
 type TaskSession struct {
-	id   string
-	name string
+	Id       string
+	Name     string
+	Act_name string
+	Tasks    []Task
 }
 
 type task_starter struct {
@@ -64,13 +58,12 @@ func CreateService(r Repository) Service {
 }
 
 type timer_impl struct {
-	activity             ActivitySession
-	task_sessions        []TaskSession
-	current_task_session TaskSession
-	current_task         task_starter
-	duration             time.Duration
-	paused               bool
-	repo                 Repository
+	activity                ActivitySession
+	current_task_session_id string
+	current_task            task_starter
+	duration                time.Duration
+	paused                  bool
+	repo                    Repository
 }
 
 // rename this new activity, each activity gets its own timer instance
@@ -79,17 +72,16 @@ func (s service_imp) NewTimer(activity, task_name string) Timer {
 	task_session_id := s.repo.NewTaskSession(task_name, activity_session_id)
 
 	return &timer_impl{
-		activity:             ActivitySession{activity_session_id, activity},
-		task_sessions:        []TaskSession{},
-		current_task_session: TaskSession{task_session_id, task_name},
-		current_task:         task_starter{task_name, time.Now()},
-		duration:             (0 * time.Second),
-		paused:               false,
-		repo:                 s.repo,
+		activity:                ActivitySession{activity_session_id, activity},
+		current_task_session_id: task_session_id,
+		current_task:            task_starter{task_name, time.Now()},
+		duration:                (0 * time.Second),
+		paused:                  false,
+		repo:                    s.repo,
 	}
 }
 
-func (s service_imp) GetTasks() []DomainTask {
+func (s service_imp) GetTasks() []TaskSession {
 	return s.repo.GetTasks()
 }
 
@@ -99,13 +91,10 @@ func (t *timer_impl) UpdateDuration() {
 
 func (t *timer_impl) Pause() {
 	task := t.current_task.end()
-	// t.tasks = append(t.tasks, t.current_task.end())
-	t.repo.AddTask(task, t.current_task_session.id)
-	// t.repo.AddTask(t.current_task.end(), t.activity)
+	t.repo.AddTask(task, t.current_task_session_id)
 }
 
 func (t *timer_impl) Continue() {
-
 	t.current_task = task_starter{t.current_task.name, time.Now()}
 }
 
@@ -114,11 +103,9 @@ func (t *timer_impl) GetDuration() time.Duration {
 }
 
 func (t *timer_impl) NewTask(task_name string) {
-	// t.tasks = append(t.tasks, t.current_task.end())
-
 	task := t.current_task.end()
-	t.repo.AddTask(task, t.current_task_session.id)
+	t.repo.AddTask(task, t.current_task_session_id)
 
-	t.current_task_session = TaskSession{t.repo.NewTaskSession(task_name, t.activity.id), task_name}
+	t.current_task_session_id = t.repo.NewTaskSession(task_name, t.activity.id)
 	t.current_task = task_starter{task_name, time.Now()}
 }

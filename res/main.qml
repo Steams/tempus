@@ -2,100 +2,234 @@ import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.5
 import Backend 1.0
+import QtQuick.Controls.Styles 1.4
+import QtGraphicalEffects 1.12
 
-Rectangle {
-    color: "white"
 
+
+
+ColumnLayout {
     Backend {
         id: backend
-        onTimeChanged : (seconds) => currentDuration.text = seconds
-        onSignalStop        : ()        => startButton.source = "play.png"
+        onTimeChanged       : (seconds) => currentDuration.text = seconds
+        onUpdateList        : (act,tsk,strt,end,dur) => tasksList.append({
+            "activityName":act,
+            "taskName":tsk,
+            "start":strt,
+            "end":end,
+            "duration":dur,
+        })
+        onClearList         : ()        => tasksList.clear()
         onSignalStart       : ()        => startButton.source = "pause.png"
         onSignalPause       : ()        => startButton.source = "play.png"
-        onUpdateList        : (act,tsk) => tasksList.append({"activityName":act,"taskName":tsk})
+        onSignalStop        : ()        => {
+            startButton.source = "play.png"
+            currentDuration.text =  "0 hrs 00 m"
+        }
     }
+
+    anchors.fill: parent
+
 
     ColumnLayout {
         spacing: 20
-        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width
+        Layout.alignment: Qt.AlignTop
 
-        RowLayout {
-            Text {
-                id: timerLabel
-                text: "Current Session"
-                font.pixelSize: 12
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            }
-
-            Text {
-                id: currentDuration
-                text: "0 hrs 00 m"
-                font.weight: Font.Bold
-                horizontalAlignment: Text.AlignHCenter
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-            }
-        }
-
-        RowLayout {
-
-            /* TextInput { */
-            /*     id: activity */
-            /*     text: "" */
-            /*     cursorVisible: true */
-            /*     width: 100 */
-            /*     Keys.onReturnPressed: { */
-            /*         backend.changeActivity(activity.text) */
-            /*     } */
-            /* } */
-            ComboBox {
-                width: 200
-                model: [ "Work", "Project", "Reading" ]
-                id: activity
-            }
-
-            TextInput {
-                id: task
-                text: ""
-                cursorVisible: true
-                width: 100
-                height: 40
-                /* Keys.onReturnPressed: { */
-                /*     backend.changeActivity(activity.text) */
-                /* } */
-            }
+        Rectangle {
+            height: 60
+            color: "white"
+            border.color: "#E5E7EB"
+            border.width: 1
+            Layout.fillWidth: true
 
 
-            Image {
-                id: startButton
-                source: "play.png"
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        /* backend.toggleStart(activity.currentText,task.text) */
-                        backend.load();
+            RowLayout {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width
+
+                ComboBox {
+                    width: 200
+                    implicitHeight: 50
+                    Layout.leftMargin: 30
+
+                    /* background: Rectangle { */
+                    /*     implicitWidth: 200 */
+                    /*     implicitHeight: 50 */
+                    /*     /\* color: button.down ? "#d6d6d6" : "#f6f6f6" *\/ */
+                    /*     /\* border.color: "#26282a" *\/ */
+                    /*     border.width: 1 */
+                    /* } */
+                    /* style: ComboBoxStyle { */
+                    /*     label: Text { */
+                    /*         color: "black" */
+                    /*     } */
+                    /* } */
+
+
+                    model: [ "Work", "Project", "Reading" ]
+                    id: activity
+                    onCurrentIndexChanged: {
+                        backend.changeActivity()
                     }
                 }
+
+                TextField {
+                    id: task
+                    text: ""
+                    cursorVisible: true
+                    Layout.preferredHeight: 50
+                    width: 1000
+                    Layout.fillWidth: true
+
+                    Keys.onReturnPressed: {
+                        backend.changeTask(task.text)
+                    }
+                }
+
+
+                Text {
+                    id: currentDuration
+                    text: "0 hrs 00 m"
+                    font.weight: Font.Bold
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+                }
+
+
+                Image {
+                    id: startButton
+                    source: "play.png"
+                    Layout.preferredWidth: 30
+                    Layout.preferredHeight: 30
+                    Layout.alignment: Qt.AlignRight
+                    Layout.rightMargin: 30
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            backend.toggleStart(activity.currentText,task.text)
+                            /* backend.load(); */
+                        }
+                    }
+                }
+
+
             }
-
-
         }
+
+
+        Text {
+            text: "Today :"
+        }
+
+        Rectangle {
+            height: 70
+            border.color: "#E5E7EB"
+            /* Layout.fillWidth: true */
+            Layout.preferredWidth: 700
+            Layout.alignment: Qt.AlignHCenter
+
+            border.width: 1
+            color: "white"
+            id: thing
+            x: 200
+
+            /* anchors.left: parent.left */
+            /* anchors.right: parent.right */
+            /* anchors.leftMargin: 40 */
+            /* anchors.rightMargin: 40 */
+
+            RowLayout {
+                spacing: 60
+                anchors.fill: parent
+
+                ColumnLayout {
+                    Layout.leftMargin: 30
+
+                    Text {
+                        text: "10:30 AM - 11:26 AM"
+                    }
+                    Text {
+                        text: "0h :24m :30s"
+                    }
+
+                }
+
+                ColumnLayout {
+                    Text {
+                        text: "Working"
+                    }
+                    Text {
+                        text: "Building out load balancer module"
+                    }
+
+                }
+            }
+        }
+
+        /* DropShadow { */
+        /*     anchors.fill: thing */
+        /*     horizontalOffset: -1 */
+        /*     verticalOffset: 2 */
+        /*     radius: 1 */
+        /*     samples: 3 */
+        /*     color: "#3A4055" */
+        /*     source: thing */
+        /* } */
 
         Repeater {
             model: ListModel {
                 id: tasksList
             }
 
-            RowLayout {
-                TextInput {
-                    text: activityName
-                }
+            /* RowLayout { */
+            /*     TextInput { */
+            /*         text: activityName */
+            /*     } */
 
-                TextInput {
-                    text: taskName
+            /*     TextInput { */
+            /*         text: taskName */
+            /*     } */
+            /* } */
+
+            Rectangle {
+                height: 70
+                border.color: "#E5E7EB"
+                Layout.preferredWidth: 700
+                Layout.alignment: Qt.AlignHCenter
+
+                border.width: 1
+                color: "white"
+                id: thing
+                x: 200
+                RowLayout {
+                    spacing: 60
+                    anchors.fill: parent
+
+                    ColumnLayout {
+                        Layout.leftMargin: 30
+
+                        Text {
+                            text: start
+                        }
+                        Text {
+                            text: duration
+                        }
+
+                    }
+
+                    ColumnLayout {
+                        Text {
+                            text: activityName
+                        }
+                        Text {
+                            text: taskName
+                        }
+
+                    }
                 }
             }
 
