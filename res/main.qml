@@ -10,6 +10,21 @@ ScrollView {
     Backend {
         id: backend
         onTimeChanged       : (seconds) => currentDuration.text = seconds
+        onUpdateTimeline        : (start,end,dur,label,offset) => {
+            console.log(start)
+            console.log(end)
+            console.log(label)
+            console.log(dur)
+            console.log(offset)
+
+            timeline.append({
+                "start":start,
+                "end":end,
+                "label":label,
+                "duration":dur,
+                "startOffset":offset,
+            })
+        }
         onUpdateList        : (act,tsk,strt,end,dur) => tasksList.append({
             "activityName":act,
             "taskName":tsk,
@@ -54,34 +69,48 @@ ScrollView {
             border.width: 1
             Layout.fillWidth: true
 
-            RowLayout {
+            Item {
+                anchors.fill: parent
 
-                ColumnLayout {
-                    Layout.preferredWidth: 200
+                Repeater {
+                    anchors.fill: parent
 
-                    Text {
-                        text: "8:00AM"
-                        Layout.alignment: Qt.AlignLeft
+                    model: ListModel {
+                        id: timeline
+
+                        /* ListElement {start: "start"; end: "end"; label: "Label here";duration: 2.5; startOffset: 0.0} */
                     }
 
-                    Button {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 10
+                    ColumnLayout {
+                        width: (parent.width * (duration/12))
+                        x: (parent.width * (startOffset/12))
 
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Working : Building load balancer module"
-
-                        background: Rectangle {
-                            anchors.fill: parent
-                            color: "blue"
+                        Text {
+                            text: start
+                            Layout.alignment: Qt.AlignLeft
                         }
-                    }
+
+                        Button {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 10
+
+                            ToolTip.visible: hovered
+                            ToolTip.text: label
+
+                            background: Rectangle {
+                                anchors.fill: parent
+                                color: "blue"
+                            }
+                        }
 
 
-                    Text {
-                        text: "12:00PM"
-                        Layout.alignment: Qt.AlignRight
+                        Text {
+                            text: end
+                            Layout.alignment: Qt.AlignRight
+                        }
+
                     }
+
 
                 }
 

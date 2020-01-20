@@ -35,17 +35,18 @@ func init() {
 
 type Backend struct {
 	qamel.QmlObject
-	_ func(string)                                 `signal:"timeChanged"`
-	_ func()                                       `signal:"signalPause"`
-	_ func()                                       `signal:"signalStop"`
-	_ func()                                       `signal:"signalStart"`
-	_ func(string, string, string, string, string) `signal:"updateList"`
-	_ func(string, string, float32)                `signal:"updateReport"`
-	_ func()                                       `signal:"clearList"`
-	_ func(string, string)                         `slot:"toggleStart"`
-	_ func()                                       `slot:"changeActivity"`
-	_ func(string)                                 `slot:"changeTask"`
-	_ func()                                       `slot:"load"`
+	_ func(string)                                   `signal:"timeChanged"`
+	_ func()                                         `signal:"signalPause"`
+	_ func()                                         `signal:"signalStop"`
+	_ func()                                         `signal:"signalStart"`
+	_ func(string, string, string, string, string)   `signal:"updateList"`
+	_ func(string, string, float64, string, float64) `signal:"updateTimeline"`
+	_ func(string, string, float64)                  `signal:"updateReport"`
+	_ func()                                         `signal:"clearList"`
+	_ func(string, string)                           `slot:"toggleStart"`
+	_ func()                                         `slot:"changeActivity"`
+	_ func(string)                                   `slot:"changeTask"`
+	_ func()                                         `slot:"load"`
 
 	is_running bool
 	is_paused  bool
@@ -90,9 +91,36 @@ func (b *Backend) dispatchReportUpdate() {
 	// }
 }
 
+func (b *Backend) dispatchTimelineUpdate() {
+	stuff := service.GetTasks()
+	fmt.Println("Timeline stuff")
+	fmt.Println(stuff)
+
+	year, month, day := time.Now().Date()
+	day_start := time.Date(year, month, day, 0, 0, 0, 0, time.Now().Location())
+	morning := day_start.Add(time.Hour * 8)
+
+	fmt.Println(morning.Format(time_layout))
+
+	for _, i := range stuff {
+		for _, x := range i.Tasks {
+
+			b.updateTimeline(
+				x.Start.Format(time_layout),
+				x.End.Format(time_layout),
+				x.End.Sub(x.Start).Hours(),
+				i.Act_name+" : "+x.Name,
+				x.Start.Sub(morning).Hours(),
+			)
+		}
+	}
+
+}
+
 func (b *Backend) load() {
 	b.dispatchListUpdate()
 	// b.dispatchReportUpdate()
+	b.dispatchTimelineUpdate()
 }
 
 func (b *Backend) changeActivity() {
