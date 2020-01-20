@@ -6,9 +6,7 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.12
 
 
-
-
-ColumnLayout {
+ScrollView {
     Backend {
         id: backend
         onTimeChanged       : (seconds) => currentDuration.text = seconds
@@ -30,8 +28,15 @@ ColumnLayout {
 
     anchors.fill: parent
 
+    contentWidth: column.width
+    contentHeight: column.height
+
+    ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+    ScrollBar.vertical.interactive: true
+    clip: true
 
     ColumnLayout {
+        id:column
         spacing: 20
         width: parent.width
         Layout.alignment: Qt.AlignTop
@@ -52,20 +57,6 @@ ColumnLayout {
                     width: 200
                     implicitHeight: 50
                     Layout.leftMargin: 30
-
-                    /* background: Rectangle { */
-                    /*     implicitWidth: 200 */
-                    /*     implicitHeight: 50 */
-                    /*     /\* color: button.down ? "#d6d6d6" : "#f6f6f6" *\/ */
-                    /*     /\* border.color: "#26282a" *\/ */
-                    /*     border.width: 1 */
-                    /* } */
-                    /* style: ComboBoxStyle { */
-                    /*     label: Text { */
-                    /*         color: "black" */
-                    /*     } */
-                    /* } */
-
 
                     model: [ "Work", "Project", "Reading" ]
                     id: activity
@@ -137,11 +128,6 @@ ColumnLayout {
             id: thing
             x: 200
 
-            /* anchors.left: parent.left */
-            /* anchors.right: parent.right */
-            /* anchors.leftMargin: 40 */
-            /* anchors.rightMargin: 40 */
-
             RowLayout {
                 spacing: 60
                 anchors.fill: parent
@@ -185,16 +171,6 @@ ColumnLayout {
                 id: tasksList
             }
 
-            /* RowLayout { */
-            /*     TextInput { */
-            /*         text: activityName */
-            /*     } */
-
-            /*     TextInput { */
-            /*         text: taskName */
-            /*     } */
-            /* } */
-
             Rectangle {
                 height: 70
                 border.color: "#E5E7EB"
@@ -237,3 +213,4 @@ ColumnLayout {
 
     }
 }
+

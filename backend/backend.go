@@ -2,7 +2,6 @@ package backend
 
 import (
 	"fmt"
-	"os"
 	"tempus/pkg/activity"
 	activity_repo "tempus/pkg/activity/sqlite_repo"
 
@@ -20,7 +19,7 @@ var time_layout string
 
 func init() {
 	time_layout = "03:04PM"
-	os.Remove("/home/steams/Development/tempus/tempus.db")
+	// os.Remove("/home/steams/Development/tempus/tempus.db")
 
 	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
 
@@ -28,7 +27,7 @@ func init() {
 		panic(err)
 	}
 
-	db.MustExec(activity_repo.Schema)
+	// db.MustExec(activity_repo.Schema)
 	repo := activity_repo.New(db)
 
 	service = activity.CreateService(repo)
@@ -53,11 +52,25 @@ type Backend struct {
 	stopper    chan int
 }
 
+func duration(tasks []activity.Task) string {
+	var sum time.Duration = 0
+	for _, x := range tasks {
+		sum = sum + x.End.Sub(x.Start)
+	}
+	return sum.String()
+}
+
 func (b *Backend) dispatchListUpdate() {
 	stuff := service.GetTasks()
 	fmt.Println(stuff)
 	for _, x := range stuff {
-		b.updateList(x.Act_name, x.Name, x.Tasks[0].Start.Format(time_layout), x.Tasks[0].End.Format(time_layout), x.Tasks[0].End.Sub(x.Tasks[0].Start).String())
+		b.updateList(
+			x.Act_name,
+			x.Name,
+			x.Tasks[0].Start.Format(time_layout),
+			x.Tasks[len(x.Tasks)-1].End.Format(time_layout),
+			duration(x.Tasks),
+		)
 	}
 }
 
