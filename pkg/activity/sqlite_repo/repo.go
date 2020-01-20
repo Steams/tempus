@@ -15,6 +15,7 @@ import (
 type Repository = activity.Repository
 type Task = activity.Task
 type TaskSession = activity.TaskSession
+type ActivitySession = activity.Activity
 
 const Schema = `
 CREATE TABLE activity_session (
@@ -88,19 +89,34 @@ type TaskScanner struct {
 }
 
 func (r repository) GetTasks() []TaskSession {
-	// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
 	session_results, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id")
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	return extractTaskSessions(session_results, r.db)
+}
+
+func (r repository) GetTasksByActivity(activity_session_id string) []TaskSession {
+	session_results, err := r.db.Queryx("SELECT t.id,t.name,a.name AS act_name FROM task_session AS t INNER JOIN activity_session AS a ON t.activity_session_id = a.id WHERE a.id = $1", activity_session_id)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return extractTaskSessions(session_results, r.db)
+}
+
+func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
+
 	sessions := []TaskSession{}
 
-	for session_results.Next() {
+	for results.Next() {
 		session := TaskSessionScanner{}
 
-		err := session_results.StructScan(&session)
+		// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
+		err := results.StructScan(&session)
 
 		if err != nil {
 			log.Fatalln(err)
@@ -109,7 +125,7 @@ func (r repository) GetTasks() []TaskSession {
 
 		tasks := []Task{}
 
-		task_results, err := r.db.Queryx("SELECT name,start,end FROM task WHERE task_session_id = $1", session.Id)
+		task_results, err := db.Queryx("SELECT name,start,end FROM task WHERE task_session_id = $1", session.Id)
 
 		for task_results.Next() {
 			task := TaskScanner{}
@@ -128,6 +144,42 @@ func (r repository) GetTasks() []TaskSession {
 
 	if sessions == nil {
 		sessions = make([]TaskSession, 0)
+		return sessions
+	}
+
+	return sessions
+}
+
+func (r repository) GetActivities() []ActivitySession {
+	session_results, err := r.db.Queryx("SELECT id, name FROM activity_session")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	sessions := []ActivitySession{}
+
+	for session_results.Next() {
+
+		session := struct {
+			id   string
+			name string
+		}{}
+
+		err := session_results.StructScan(&session)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Printf("%+v\n", session)
+
+		tasks := r.GetTasksByActivity(session.id)
+
+		sessions = append(sessions, ActivitySession{session.id, session.name, tasks})
+	}
+
+	if sessions == nil {
+		sessions = make([]ActivitySession, 0)
 		return sessions
 	}
 

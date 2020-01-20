@@ -17,6 +17,11 @@ ScrollView {
             "end":end,
             "duration":dur,
         })
+        onUpdateReport       : (act,dur,calc_width) => reportList.append({
+            "title":act,
+            "duration":tsk,
+            "percentage":calc_width,
+        })
         onClearList         : ()        => tasksList.clear()
         onSignalStart       : ()        => startButton.source = "pause.png"
         onSignalPause       : ()        => startButton.source = "play.png"
@@ -28,18 +33,61 @@ ScrollView {
 
     anchors.fill: parent
 
-    contentWidth: column.width
     contentHeight: column.height
 
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
     ScrollBar.vertical.interactive: true
     clip: true
+    Component.onCompleted: backend.load()
+
 
     ColumnLayout {
         id:column
         spacing: 20
         width: parent.width
         Layout.alignment: Qt.AlignTop
+
+        Rectangle {
+            height: 60
+            color: "grey"
+            border.color: "#E5E7EB"
+            border.width: 1
+            Layout.fillWidth: true
+
+            RowLayout {
+
+                ColumnLayout {
+                    Layout.preferredWidth: 200
+
+                    Text {
+                        text: "8:00AM"
+                        Layout.alignment: Qt.AlignLeft
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 10
+
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Working : Building load balancer module"
+
+                        background: Rectangle {
+                            anchors.fill: parent
+                            color: "blue"
+                        }
+                    }
+
+
+                    Text {
+                        text: "12:00PM"
+                        Layout.alignment: Qt.AlignRight
+                    }
+
+                }
+
+            }
+        }
+
 
         Rectangle {
             height: 60
@@ -58,11 +106,14 @@ ScrollView {
                     implicitHeight: 50
                     Layout.leftMargin: 30
 
-                    model: [ "Work", "Project", "Reading" ]
+                    model: [ "Work", "Project", "Reading","Misc"]
                     id: activity
                     onCurrentIndexChanged: {
                         backend.changeActivity()
                     }
+
+                    /* ToolTip.visible: hovered */
+                    /* ToolTip.text: "Save the active project" */
                 }
 
                 TextField {
@@ -114,46 +165,6 @@ ScrollView {
 
         Text {
             text: "Today :"
-        }
-
-        Rectangle {
-            height: 70
-            border.color: "#E5E7EB"
-            /* Layout.fillWidth: true */
-            Layout.preferredWidth: 700
-            Layout.alignment: Qt.AlignHCenter
-
-            border.width: 1
-            color: "white"
-            id: thing
-            x: 200
-
-            RowLayout {
-                spacing: 60
-                anchors.fill: parent
-
-                ColumnLayout {
-                    Layout.leftMargin: 30
-
-                    Text {
-                        text: "10:30 AM - 11:26 AM"
-                    }
-                    Text {
-                        text: "0h :24m :30s"
-                    }
-
-                }
-
-                ColumnLayout {
-                    Text {
-                        text: "Working"
-                    }
-                    Text {
-                        text: "Building out load balancer module"
-                    }
-
-                }
-            }
         }
 
         /* DropShadow { */
@@ -209,6 +220,79 @@ ScrollView {
                 }
             }
 
+        }
+
+        Rectangle {
+            border.color: "#E5E7EB"
+            Layout.preferredWidth: 250
+            Layout.alignment: Qt.AlignHCenter
+            border.width: 1
+            color: "white"
+            Layout.preferredHeight: 400
+
+            ColumnLayout {
+                id: report
+                spacing: 30
+                /* width: 400 */
+                /* Layout.preferredWidth: 400 */
+                width: parent.width
+
+                RowLayout {
+                    Text {
+                        text: "Total Activity"
+                    }
+
+                    Text {
+                        text: "4:36:00"
+                    }
+                }
+
+                Repeater {
+                    Layout.fillWidth: true
+                    /* Layout.preferredWidth: 400 */
+                    /* width: 400 */
+
+                    model: ListModel {
+                        id: reportList
+
+                        ListElement {title: "Working"; duration: 2.5}
+                        ListElement {title: "Project"; duration: 2}
+                        ListElement {title: "Reading"; duration: 1}
+                        ListElement {title: "Misc"; duration: 3.5}
+                    }
+
+                    ColumnLayout {
+                        Layout.preferredWidth: parent.width
+                        /* Layout.fillWidth: true */
+                        /* Layout.preferredWidth: 400 */
+                        /* width: parent.width */
+
+                        Text {
+                            text: title
+                        }
+
+                        RowLayout {
+                            /* Layout.fillWidth: true */
+                            Layout.preferredWidth: parent.width
+
+                            Rectangle {
+                                Layout.alignment: Qt.AlignLeft
+                                color: "#2FCEC7"
+                                Layout.preferredWidth: (duration * 35)
+                                Layout.preferredHeight: 5
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignRight
+                                text : "0:15:25"
+                                Layout.preferredWidth: 50
+                            }
+                        }
+                    }
+
+                }
+
+            }
         }
 
     }

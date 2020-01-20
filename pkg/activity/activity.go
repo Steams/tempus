@@ -12,6 +12,7 @@ type Repository interface {
 	NewActivitySession(name string) string
 	NewTaskSession(name, activity_id string) string
 	GetTasks() []TaskSession
+	GetActivities() []Activity
 }
 
 type Timer interface {
@@ -31,6 +32,12 @@ type Task struct {
 type ActivitySession struct {
 	id   string
 	name string
+}
+
+type Activity struct {
+	Id    string
+	Name  string
+	Tasks []TaskSession
 }
 
 type TaskSession struct {
@@ -69,11 +76,10 @@ type timer_impl struct {
 // rename this new activity, each activity gets its own timer instance
 func (s service_imp) NewTimer(activity, task_name string) Timer {
 	activity_session_id := s.repo.NewActivitySession(activity)
-	task_session_id := s.repo.NewTaskSession(task_name, activity_session_id)
 
 	return &timer_impl{
 		activity:                ActivitySession{activity_session_id, activity},
-		current_task_session_id: task_session_id,
+		current_task_session_id: "",
 		current_task:            task_starter{task_name, time.Now()},
 		duration:                (0 * time.Second),
 		paused:                  false,
@@ -85,11 +91,19 @@ func (s service_imp) GetTasks() []TaskSession {
 	return s.repo.GetTasks()
 }
 
+func (s service_imp) GetActivities() []Activity {
+	return s.repo.GetActivities()
+}
+
 func (t *timer_impl) UpdateDuration() {
 	t.duration = t.duration + (1 * time.Second)
 }
 
 func (t *timer_impl) Pause() {
+	if t.current_task_session_id == "" {
+		t.current_task_session_id = t.repo.NewTaskSession(t.current_task.name, t.activity.id)
+	}
+
 	task := t.current_task.end()
 	t.repo.AddTask(task, t.current_task_session_id)
 }

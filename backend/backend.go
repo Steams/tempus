@@ -40,6 +40,7 @@ type Backend struct {
 	_ func()                                       `signal:"signalStop"`
 	_ func()                                       `signal:"signalStart"`
 	_ func(string, string, string, string, string) `signal:"updateList"`
+	_ func(string, string, float32)                `signal:"updateReport"`
 	_ func()                                       `signal:"clearList"`
 	_ func(string, string)                         `slot:"toggleStart"`
 	_ func()                                       `slot:"changeActivity"`
@@ -74,8 +75,24 @@ func (b *Backend) dispatchListUpdate() {
 	}
 }
 
+func (b *Backend) dispatchReportUpdate() {
+	// TODO this needs to be get activities BY TYPE "work ...", or u can get all activities and aggregate them into groups urslef
+	// stuff := service.GetActivities()
+	// fmt.Println(stuff)
+	// for _, x := range stuff {
+	// 	b.updateList(
+	// 		x.Act_name,
+	// 		x.Name,
+	// 		x.Tasks[0].Start.Format(time_layout),
+	// 		x.Tasks[len(x.Tasks)-1].End.Format(time_layout),
+	// 		duration(x.Tasks),
+	// 	)
+	// }
+}
+
 func (b *Backend) load() {
 	b.dispatchListUpdate()
+	// b.dispatchReportUpdate()
 }
 
 func (b *Backend) changeActivity() {
@@ -170,7 +187,7 @@ func (b *Backend) runTimer() {
 			b.timer.UpdateDuration()
 			fmt.Println(b.timer)
 			t := b.timer.GetDuration()
-			b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes()), int(t.Seconds())))
+			b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
 
 		}
 	}
