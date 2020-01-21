@@ -74,6 +74,7 @@ ScrollView {
 
                 Repeater {
                     anchors.fill: parent
+                    id: timelineRepeater
 
                     model: ListModel {
                         id: timeline
@@ -82,12 +83,13 @@ ScrollView {
                     }
 
                     ColumnLayout {
-                        width: (parent.width * (duration/12))
-                        x: (parent.width * (startOffset/12))
+                        width: (parent.width * (duration/16))
+                        x: (parent.width * (startOffset/16))
 
                         Text {
-                            text: start
+                            text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : start
                             Layout.alignment: Qt.AlignLeft
+                            font.pixelSize:9
                         }
 
                         Button {
@@ -103,10 +105,10 @@ ScrollView {
                             }
                         }
 
-
                         Text {
-                            text: end
+                            text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : end
                             Layout.alignment: Qt.AlignRight
+                            font.pixelSize:9
                         }
 
                     }

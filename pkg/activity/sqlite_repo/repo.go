@@ -108,6 +108,32 @@ func (r repository) GetTasksByActivity(activity_session_id string) []TaskSession
 	return extractTaskSessions(session_results, r.db)
 }
 
+func (r repository) GetTasksByDay(date time.Time) []TaskSession {
+	year, month, day := date.Date()
+	day_start := time.Date(year, month, day, 0, 0, 0, 0, date.Location())
+	day_end := time.Date(year, month, day, 24, 0, 0, 0, date.Location())
+
+	fmt.Println(day_start.Unix())
+	fmt.Println(day_end.Unix())
+
+	session_results, err := r.db.Queryx(`
+	SELECT t.id,t.name,a.name AS act_name
+	FROM task_session AS t
+	INNER JOIN activity_session AS a
+	  ON t.activity_session_id = a.id
+	INNER JOIN task
+	  ON task.task_session_id = t.id
+	WHERE task.start BETWEEN $1 AND $2
+	GROUP BY t.id
+	`, day_start.Unix(), day_end.Unix())
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return extractTaskSessions(session_results, r.db)
+}
+
 func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 
 	sessions := []TaskSession{}

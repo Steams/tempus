@@ -63,7 +63,7 @@ func duration(tasks []activity.Task) string {
 }
 
 func (b *Backend) dispatchListUpdate() {
-	stuff := service.GetTasks()
+	stuff := service.GetTasksByDay(time.Now())
 	fmt.Println(stuff)
 	for _, x := range stuff {
 		b.updateList(
@@ -92,7 +92,7 @@ func (b *Backend) dispatchReportUpdate() {
 }
 
 func (b *Backend) dispatchTimelineUpdate() {
-	stuff := service.GetTasks()
+	stuff := service.GetTasksByDay(time.Now())
 	fmt.Println("Timeline stuff")
 	fmt.Println(stuff)
 
