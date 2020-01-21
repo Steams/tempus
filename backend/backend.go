@@ -16,6 +16,8 @@ import (
 
 var service activity.Service
 var time_layout string
+var today time.Time
+var displayed_date time.Time
 
 func init() {
 	time_layout = "03:04PM"
@@ -31,6 +33,9 @@ func init() {
 	repo := activity_repo.New(db)
 
 	service = activity.CreateService(repo)
+
+	today = time.Now()
+	displayed_date = time.Now()
 }
 
 type Backend struct {
@@ -43,10 +48,13 @@ type Backend struct {
 	_ func(string, string, float64, string, float64) `signal:"updateTimeline"`
 	_ func(string, string, float64)                  `signal:"updateReport"`
 	_ func()                                         `signal:"clearList"`
+	_ func()                                         `signal:"clearTimeline"`
 	_ func(string, string)                           `slot:"toggleStart"`
 	_ func()                                         `slot:"changeActivity"`
 	_ func(string)                                   `slot:"changeTask"`
 	_ func()                                         `slot:"load"`
+	_ func()                                         `slot:"dateBack"`
+	_ func()                                         `slot:"dateForward"`
 
 	is_running bool
 	is_paused  bool
@@ -63,7 +71,10 @@ func duration(tasks []activity.Task) string {
 }
 
 func (b *Backend) dispatchListUpdate() {
-	stuff := service.GetTasksByDay(time.Now())
+
+	b.clearList()
+
+	stuff := service.GetTasksByDay(displayed_date)
 	fmt.Println(stuff)
 	for _, x := range stuff {
 		b.updateList(
@@ -92,11 +103,13 @@ func (b *Backend) dispatchReportUpdate() {
 }
 
 func (b *Backend) dispatchTimelineUpdate() {
-	stuff := service.GetTasksByDay(time.Now())
+	b.clearTimeline()
+
+	stuff := service.GetTasksByDay(displayed_date)
 	fmt.Println("Timeline stuff")
 	fmt.Println(stuff)
 
-	year, month, day := time.Now().Date()
+	year, month, day := displayed_date.Date()
 	day_start := time.Date(year, month, day, 0, 0, 0, 0, time.Now().Location())
 	morning := day_start.Add(time.Hour * 8)
 
@@ -115,6 +128,22 @@ func (b *Backend) dispatchTimelineUpdate() {
 		}
 	}
 
+}
+
+func (b *Backend) dateForward() {
+	displayed_date = displayed_date.AddDate(0, 0, 1)
+
+	b.dispatchListUpdate()
+	// b.dispatchReportUpdate()
+	b.dispatchTimelineUpdate()
+}
+
+func (b *Backend) dateBack() {
+	displayed_date = displayed_date.AddDate(0, 0, -1)
+
+	b.dispatchListUpdate()
+	// b.dispatchReportUpdate()
+	b.dispatchTimelineUpdate()
 }
 
 func (b *Backend) load() {
@@ -142,7 +171,6 @@ func (b *Backend) changeActivity() {
 func (b *Backend) changeTask(name string) {
 	b.timer.NewTask(name)
 
-	b.clearList()
 	b.dispatchListUpdate()
 }
 

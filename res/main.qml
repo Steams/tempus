@@ -38,6 +38,7 @@ ScrollView {
             "percentage":calc_width,
         })
         onClearList         : ()        => tasksList.clear()
+        onClearTimeline         : ()        => timeline.clear()
         onSignalStart       : ()        => startButton.source = "pause.png"
         onSignalPause       : ()        => startButton.source = "play.png"
         onSignalStop        : ()        => {
@@ -97,7 +98,7 @@ ScrollView {
                             Layout.preferredHeight: 10
 
                             ToolTip.visible: hovered
-                            ToolTip.text: label
+                            ToolTip.text: label + " | " + start +" - " + end
 
                             background: Rectangle {
                                 anchors.fill: parent
@@ -193,10 +194,30 @@ ScrollView {
             }
         }
 
+        RowLayout {
+            Button {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth : 20
+                text: "<"
+                onClicked: {
+                    backend.dateBack();
+                }
+            }
 
-        Text {
-            text: "Today :"
+            Text {
+                text: "Today :"
+            }
+
+            Button {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth : 20
+                text: ">"
+                onClicked: {
+                    backend.dateForward();
+                }
+            }
         }
+
 
         /* DropShadow { */
         /*     anchors.fill: thing */
