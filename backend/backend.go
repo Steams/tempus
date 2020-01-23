@@ -46,9 +46,10 @@ type Backend struct {
 	_ func()                                         `signal:"signalStart"`
 	_ func(string, string, string, string, string)   `signal:"updateList"`
 	_ func(string, string, float64, string, float64) `signal:"updateTimeline"`
-	_ func(string, string, float64)                  `signal:"updateReport"`
+	_ func(string, float64)                          `signal:"updateReport"`
 	_ func()                                         `signal:"clearList"`
 	_ func()                                         `signal:"clearTimeline"`
+	_ func()                                         `signal:"clearReports"`
 	_ func(string, string)                           `slot:"toggleStart"`
 	_ func()                                         `slot:"changeActivity"`
 	_ func(string)                                   `slot:"changeTask"`
@@ -89,17 +90,40 @@ func (b *Backend) dispatchListUpdate() {
 
 func (b *Backend) dispatchReportUpdate() {
 	// TODO this needs to be get activities BY TYPE "work ...", or u can get all activities and aggregate them into groups urslef
-	// stuff := service.GetActivities()
-	// fmt.Println(stuff)
-	// for _, x := range stuff {
-	// 	b.updateList(
-	// 		x.Act_name,
-	// 		x.Name,
-	// 		x.Tasks[0].Start.Format(time_layout),
-	// 		x.Tasks[len(x.Tasks)-1].End.Format(time_layout),
-	// 		duration(x.Tasks),
-	// 	)
-	// }
+
+	sessions := service.GetTasksByDay(displayed_date)
+	activities := make(map[string][]activity.Task)
+
+	calc_duration := func(tasks []activity.Task) time.Duration {
+
+		var dur time.Duration = 0
+
+		for _, x := range tasks {
+			dur = dur + x.End.Sub(x.Start)
+		}
+
+		return dur
+	}
+
+	for _, x := range sessions {
+		if val, ok := activities[x.Act_name]; ok {
+			activities[x.Act_name] = append(val, x.Tasks...)
+		} else {
+			activities[x.Act_name] = x.Tasks
+		}
+	}
+
+	fmt.Println("-----------------------Activities")
+	fmt.Println(activities)
+	fmt.Println("-----------------------")
+
+	b.clearReports()
+	for k, v := range activities {
+		b.updateReport(
+			k,
+			calc_duration(v).Hours(),
+		)
+	}
 }
 
 func (b *Backend) dispatchTimelineUpdate() {
@@ -133,22 +157,18 @@ func (b *Backend) dispatchTimelineUpdate() {
 func (b *Backend) dateForward() {
 	displayed_date = displayed_date.AddDate(0, 0, 1)
 
-	b.dispatchListUpdate()
-	// b.dispatchReportUpdate()
-	b.dispatchTimelineUpdate()
+	b.load()
 }
 
 func (b *Backend) dateBack() {
 	displayed_date = displayed_date.AddDate(0, 0, -1)
 
-	b.dispatchListUpdate()
-	// b.dispatchReportUpdate()
-	b.dispatchTimelineUpdate()
+	b.load()
 }
 
 func (b *Backend) load() {
 	b.dispatchListUpdate()
-	// b.dispatchReportUpdate()
+	b.dispatchReportUpdate()
 	b.dispatchTimelineUpdate()
 }
 

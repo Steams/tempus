@@ -7,6 +7,14 @@ import QtGraphicalEffects 1.12
 
 
 ScrollView {
+    function durationToString(n) {
+        var hours = Math.floor(n / 3600);
+        var remaining = n % 3600;
+        var minutes = Math.floor(remaining / 60);
+        var seconds = remaining % 60;
+        return hours + " h " + minutes + " m "
+    }
+
     Backend {
         id: backend
         onTimeChanged       : (seconds) => currentDuration.text = seconds
@@ -32,13 +40,26 @@ ScrollView {
             "end":end,
             "duration":dur,
         })
-        onUpdateReport       : (act,dur,calc_width) => reportList.append({
-            "title":act,
-            "duration":tsk,
-            "percentage":calc_width,
-        })
+        onUpdateReport       : (act,dur) => {
+            reportList.append({
+                "title":act,
+                "duration":dur,
+            })
+
+            var sum = 0;
+            console.log("REPOT LSIT COUNT _(#!_#_!)#_!)#_!)#_!)#")
+            console.log(reportList.count)
+
+            for (var i = 0 ; i < reportList.count; i++) {
+                console.log(reportList.get(i))
+                console.log(reportList.get(i).duration)
+                sum += reportList.get(i).duration
+            }
+            totalLabel.text = durationToString(sum * 3600)
+        }
         onClearList         : ()        => tasksList.clear()
         onClearTimeline         : ()        => timeline.clear()
+        onClearReports         : ()        => reportList.clear()
         onSignalStart       : ()        => startButton.source = "pause.png"
         onSignalPause       : ()        => startButton.source = "play.png"
         onSignalStop        : ()        => {
@@ -98,7 +119,7 @@ ScrollView {
                             Layout.preferredHeight: 10
 
                             ToolTip.visible: hovered
-                            ToolTip.text: label + " | " + start +" - " + end
+                            ToolTip.text: label + " | " + start +" - " + end + " | " + durationToString(duration* 3600)
 
                             background: Rectangle {
                                 anchors.fill: parent
@@ -295,7 +316,8 @@ ScrollView {
                     }
 
                     Text {
-                        text: "4:36:00"
+                        id: totalLabel
+                        text: ""
                     }
                 }
 
@@ -307,10 +329,10 @@ ScrollView {
                     model: ListModel {
                         id: reportList
 
-                        ListElement {title: "Working"; duration: 2.5}
-                        ListElement {title: "Project"; duration: 2}
-                        ListElement {title: "Reading"; duration: 1}
-                        ListElement {title: "Misc"; duration: 3.5}
+                        /* ListElement {title: "Working"; duration: 2.5} */
+                        /* ListElement {title: "Project"; duration: 2} */
+                        /* ListElement {title: "Reading"; duration: 1} */
+                        /* ListElement {title: "Misc"; duration: 3.5} */
                     }
 
                     ColumnLayout {
@@ -330,13 +352,13 @@ ScrollView {
                             Rectangle {
                                 Layout.alignment: Qt.AlignLeft
                                 color: "#2FCEC7"
-                                Layout.preferredWidth: (duration * 35)
+                                Layout.preferredWidth: (duration * (parent.width/8))
                                 Layout.preferredHeight: 5
                             }
 
                             Text {
                                 Layout.alignment: Qt.AlignRight
-                                text : "0:15:25"
+                                text: durationToString(duration* 3600)
                                 Layout.preferredWidth: 50
                             }
                         }
