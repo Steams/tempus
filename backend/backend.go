@@ -21,9 +21,10 @@ var displayed_date time.Time
 
 func init() {
 	time_layout = "03:04PM"
-	// os.Remove("/home/steams/Development/tempus/tempus.db")
+	// os.Remove("/home/steams/Development/tempus/tempus_cli.db")
 
-	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
 
 	if err != nil {
 		panic(err)
@@ -47,6 +48,7 @@ type Backend struct {
 	_ func(string, string, string, string, string)   `signal:"updateList"`
 	_ func(string, string, float64, string, float64) `signal:"updateTimeline"`
 	_ func(string, float64)                          `signal:"updateReport"`
+	_ func(string)                                   `signal:"tagAdded"`
 	_ func()                                         `signal:"clearList"`
 	_ func()                                         `signal:"clearTimeline"`
 	_ func()                                         `signal:"clearReports"`
@@ -56,11 +58,13 @@ type Backend struct {
 	_ func()                                         `slot:"load"`
 	_ func()                                         `slot:"dateBack"`
 	_ func()                                         `slot:"dateForward"`
+	_ func(string)                                   `slot:"addTag"`
 
-	is_running bool
-	is_paused  bool
-	timer      activity.Timer
-	stopper    chan int
+	is_running   bool
+	is_paused    bool
+	timer        activity.Timer
+	stopper      chan int
+	current_tags []string
 }
 
 func duration(tasks []activity.Task) string {
@@ -153,6 +157,13 @@ func (b *Backend) dispatchTimelineUpdate() {
 	}
 
 }
+func (b *Backend) addTag(tag string) {
+	b.current_tags = append(b.current_tags, tag)
+	if b.timer != nil {
+		b.timer.SetTags(b.current_tags)
+	}
+	b.tagAdded(tag)
+}
 
 func (b *Backend) dateForward() {
 	displayed_date = displayed_date.AddDate(0, 0, 1)
@@ -219,6 +230,7 @@ func (b *Backend) toggleStart(act_name, task_name string) {
 func (b *Backend) start(activity_name, task string) {
 
 	b.timer = service.NewTimer(activity_name, task)
+	b.timer.SetTags(b.current_tags)
 	b.is_running = true
 	b.stopper = make(chan int)
 

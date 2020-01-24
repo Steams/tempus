@@ -1,6 +1,9 @@
 package activity
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Service interface {
 	NewTimer(act_name, task_name string) Timer
@@ -11,10 +14,12 @@ type Service interface {
 type Repository interface {
 	AddTask(task Task, session_id string)
 	NewActivitySession(name string) string
-	NewTaskSession(name, activity_id string) string
+	NewTaskSession(name, activity_id string, tag_ids []string) string
 	GetTasks() []TaskSession
 	GetActivities() []Activity
 	GetTasksByDay(date time.Time) []TaskSession
+	CreateTag(string) string
+	GetTags() []Tag
 }
 
 type Timer interface {
@@ -23,6 +28,12 @@ type Timer interface {
 	NewTask(string)
 	UpdateDuration()
 	GetDuration() time.Duration
+	SetTags([]string)
+}
+
+type Tag struct {
+	id   string
+	name string
 }
 
 type Task struct {
@@ -60,10 +71,19 @@ func (t task_starter) end() Task {
 
 type service_imp struct {
 	repo Repository
+	tags map[string]string
 }
 
 func CreateService(r Repository) Service {
-	return service_imp{r}
+	tags := r.GetTags()
+
+	tags_map := make(map[string]string)
+
+	for _, x := range tags {
+		tags_map[x.name] = x.id
+	}
+
+	return service_imp{r, tags_map}
 }
 
 type timer_impl struct {
@@ -74,6 +94,8 @@ type timer_impl struct {
 	duration                time.Duration
 	paused                  bool
 	repo                    Repository
+	current_tags            []string
+	tags_map                map[string]string
 }
 
 // rename this new activity, each activity gets its own timer instance
@@ -86,6 +108,8 @@ func (s service_imp) NewTimer(activity, task_name string) Timer {
 		duration:                (0 * time.Second),
 		paused:                  false,
 		repo:                    s.repo,
+		current_tags:            []string{},
+		tags_map:                s.tags,
 	}
 }
 
@@ -105,6 +129,13 @@ func (t *timer_impl) UpdateDuration() {
 	t.duration = t.duration + (1 * time.Second)
 }
 
+func (t *timer_impl) SetTags(tags []string) {
+	t.current_tags = tags
+	fmt.Println("_________________________________________--tags Set-----------------------------")
+	fmt.Println(t.current_tags)
+	fmt.Println("_________________________________________--tags done-----------------------------")
+}
+
 func (t *timer_impl) Pause() {
 
 	if t.activity_id == "" {
@@ -112,7 +143,18 @@ func (t *timer_impl) Pause() {
 	}
 
 	if t.current_task_session_id == "" {
-		t.current_task_session_id = t.repo.NewTaskSession(t.current_task.name, t.activity_id)
+		tag_ids := []string{}
+
+		for _, x := range t.current_tags {
+			// NOTE this wont update the services tag list, you need to have the service perform methods on the timer
+			if _, ok := t.tags_map[x]; !ok {
+				t.tags_map[x] = t.repo.CreateTag(x)
+			}
+
+			tag_ids = append(tag_ids, t.tags_map[x])
+		}
+
+		t.current_task_session_id = t.repo.NewTaskSession(t.current_task.name, t.activity_id, tag_ids)
 	}
 
 	task := t.current_task.end()
@@ -131,6 +173,17 @@ func (t *timer_impl) NewTask(task_name string) {
 	task := t.current_task.end()
 	t.repo.AddTask(task, t.current_task_session_id)
 
-	t.current_task_session_id = t.repo.NewTaskSession(task_name, t.activity_id)
+	tag_ids := []string{}
+
+	for _, x := range t.current_tags {
+		// NOTE this wont update the services tag list, you need to have the service perform methods on the timer
+		if _, ok := t.tags_map[x]; !ok {
+			t.tags_map[x] = t.repo.CreateTag(x)
+		}
+
+		tag_ids = append(tag_ids, t.tags_map[x])
+	}
+
+	t.current_task_session_id = t.repo.NewTaskSession(task_name, t.activity_id, tag_ids)
 	t.current_task = task_starter{task_name, time.Now()}
 }

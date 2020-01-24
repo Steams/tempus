@@ -16,17 +16,21 @@ type Repository = activity.Repository
 type Task = activity.Task
 type TaskSession = activity.TaskSession
 type ActivitySession = activity.Activity
+type Tag = activity.Tag
 
+// NOTE FIXME : the activity_name should either be on task_session or not exist at all (take it off task)
 const Schema = `
 CREATE TABLE activity_session (
     id text,
     name text
 );
+
 CREATE TABLE task_session (
     id text,
     name text,
     activity_session_id text
 );
+
 CREATE TABLE task (
     name text,
     activity_name text,
@@ -34,6 +38,17 @@ CREATE TABLE task (
     end integer,
     duration integer,
     task_session_id
+);
+
+CREATE TABLE tag (
+    id text,
+    name text
+);
+
+CREATE TABLE task_session_tag (
+    id text,
+    task_session_id text,
+    tag_id text
 );
 `
 
@@ -65,15 +80,28 @@ func (r repository) NewActivitySession(activity string) string {
 	return id
 }
 
-func (r repository) NewTaskSession(name, activity_id string) string {
+func (r repository) NewTaskSession(name, activity_id string, tag_ids []string) string {
 
 	stmt, err := r.db.Preparex("INSERT INTO task_session(id, name,activity_session_id) values(?,?,?)")
+
 	if err != nil {
 		panic(err)
 	}
-	id := uuid.New().String()
-	stmt.MustExec(id, name, activity_id)
-	return id
+
+	session_id := uuid.New().String()
+	stmt.MustExec(session_id, name, activity_id)
+
+	for _, tag_id := range tag_ids {
+		stmt, err = r.db.Preparex("INSERT INTO task_session_tag(id, task_session_id,tag_id) values(?,?,?)")
+		if err != nil {
+			panic(err)
+		}
+
+		id := uuid.New().String()
+		stmt.MustExec(id, session_id, tag_id)
+	}
+
+	return session_id
 }
 
 type TaskSessionScanner struct {
@@ -210,4 +238,46 @@ func (r repository) GetActivities() []ActivitySession {
 	}
 
 	return sessions
+}
+
+func (r repository) CreateTag(name string) string {
+
+	stmt, err := r.db.Preparex("INSERT INTO tag(id, name) values(?,?)")
+	if err != nil {
+		panic(err)
+	}
+	id := uuid.New().String()
+	stmt.MustExec(id, name)
+
+	return id
+}
+
+func (r repository) GetTags() []Tag {
+	results, err := r.db.Queryx("SELECT id, name FROM tag")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tags := []Tag{}
+
+	for results.Next() {
+		tag := Tag{}
+
+		err := results.StructScan(&tag)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Printf("%+v\n", tag)
+
+		tags = append(tags, tag)
+	}
+
+	if tags == nil {
+		tags = make([]Tag, 0)
+		return tags
+	}
+
+	return tags
 }

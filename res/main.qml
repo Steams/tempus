@@ -47,9 +47,6 @@ ScrollView {
             })
 
             var sum = 0;
-            console.log("REPOT LSIT COUNT _(#!_#_!)#_!)#_!)#_!)#")
-            console.log(reportList.count)
-
             for (var i = 0 ; i < reportList.count; i++) {
                 console.log(reportList.get(i))
                 console.log(reportList.get(i).duration)
@@ -57,6 +54,9 @@ ScrollView {
             }
             totalLabel.text = durationToString(sum * 3600)
         }
+        onTagAdded        : (name) => tagsList.append({
+            "name":name,
+        })
         onClearList         : ()        => tasksList.clear()
         onClearTimeline         : ()        => timeline.clear()
         onClearReports         : ()        => reportList.clear()
@@ -212,6 +212,49 @@ ScrollView {
                 }
 
 
+            }
+        }
+
+
+        RowLayout {
+
+            Repeater {
+                model: ListModel {
+                    id: tagsList
+                }
+
+                Rectangle {
+                    height: 20
+                    border.color: "#E5E7EB"
+                    border.width: 1
+                    color: "red"
+                    width: 70
+
+                    Text {
+                        text: name
+                    }
+                }
+
+            }
+
+            Button {
+                Layout.preferredHeight: 20
+                Layout.preferredWidth : 20
+                text: "+"
+                onClicked: {
+                    backend.addTag(tagInput.text)
+                }
+            }
+
+            TextField {
+                id: tagInput
+                text: ""
+                cursorVisible: true
+                Layout.preferredHeight: 50
+                width: 200
+
+                Keys.onReturnPressed: {
+                }
             }
         }
 
