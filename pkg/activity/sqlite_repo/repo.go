@@ -232,7 +232,40 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 			tasks = append(tasks, Task{task.Name, time.Unix(task.Start, 0), time.Unix(task.End, 0)})
 		}
 
-		sessions = append(sessions, TaskSession{session.Id, session.Name, session.Act_name, tasks})
+		tags := []string{}
+
+		// tag_results, err := db.Queryx(`
+		// SELECT tag.name
+		// FROM tag
+		// INNER JOIN task_session_tag
+		//   ON task_session_tag.tag_id = tag.id
+		// WHERE task_session_tag.task_session_id = $1
+		// GROUP BY tag.id
+		// `, session.Id)
+
+		db.Select(&tags, `
+		SELECT tag.name
+		FROM tag
+		INNER JOIN task_session_tag
+		  ON task_session_tag.tag_id = tag.id
+		WHERE task_session_tag.task_session_id = $1
+		GROUP BY tag.id
+		`, session.Id)
+
+		// for tag_results.Next() {
+		// 	tag := ""
+
+		// 	tt, _ := task_results.SliceScan()
+		// 	tags, _ = tt.([]string)
+
+		// 	if err != nil {
+		// 		log.Fatalln(err)
+		// 	}
+		// 	// fmt.Printf("%+v\n", task)
+		// 	// tags = append(tags, tag)
+		// }
+
+		sessions = append(sessions, TaskSession{session.Id, session.Name, session.Act_name, tasks, tags})
 	}
 
 	if sessions == nil {

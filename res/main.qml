@@ -369,8 +369,11 @@ ScrollView {
                         ColumnLayout {
                             anchors.left: parent.left
                             anchors.right: parent.right
+                            anchors.top: parent.top
                             anchors.leftMargin: 20
                             anchors.rightMargin: 20
+                            anchors.topMargin: 20
+                            spacing: 20
 
                             Repeater {
                                 id: tasksContainer
@@ -379,33 +382,73 @@ ScrollView {
                                 }
 
                                 Rectangle {
-                                    height: 70
+                                    height: 60
                                     Layout.preferredWidth: parent.width
+                                    border.width: 1
+                                    border.color: "#E5E7EB"
 
-                                    RowLayout {
-                                        spacing: 60
-                                        anchors.fill: parent
+                                    ColumnLayout {
+                                        width: parent.width
+                                        spacing: 10
 
-                                        ColumnLayout {
-                                            Layout.leftMargin: 30
+                                        Row {
+                                            anchors.fill: parent
+                                            Layout.preferredHeight: 10
 
                                             Text {
-                                                text: (start + " - " + end)
+                                                text: "Work / 9:14AM - 11:33PM"
+                                                anchors.left: parent.left
                                             }
+
                                             Text {
                                                 text: duration
+                                                anchors.right: parent.right
                                             }
+
+                                            /* ColumnLayout { */
+                                            /*     Layout.leftMargin: 30 */
+
+                                            /*     Text { */
+                                            /*         text: (start + " - " + end) */
+                                            /*     } */
+                                            /*     Text { */
+                                            /*         text: duration */
+                                            /*     } */
+
+                                            /* } */
 
                                         }
 
-                                        ColumnLayout {
-                                            Text {
-                                                text: activityName
-                                            }
-                                            Text {
-                                                text: taskName
-                                            }
+                                        Text {
+                                            Layout.preferredHeight: 10
+                                            text: taskName
+                                        }
 
+
+                                        RowLayout {
+                                            Layout.preferredHeight: 20
+                                            Layout.alignment: Qt.AlignRight
+
+                                            Repeater {
+                                                model: ListModel {
+                                                    id: tagslist
+                                                    ListElement {title: "Haskell" }
+                                                    ListElement {title: "Go" }
+                                                    ListElement {title: "Tempus" }
+
+                                                }
+                                                Rectangle {
+                                                    height: 20
+                                                    width: 70
+                                                    color: "red"
+                                                    radius: 10
+
+                                                    Text {
+                                                        text: title
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

@@ -56,6 +56,7 @@ type TaskSession struct {
 	Name     string
 	Act_name string
 	Tasks    []Task
+	Tags     []string
 }
 
 type task_starter struct {
