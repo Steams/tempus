@@ -53,11 +53,44 @@ CREATE TABLE task_session_tag (
 `
 
 func New(db *sqlx.DB) Repository {
-	return repository{db}
+
+	results, err := db.Queryx("SELECT id, name FROM tag")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tags := []Tag{}
+
+	for results.Next() {
+		tag := Tag{}
+
+		err := results.StructScan(&tag)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Printf("%+v\n", tag)
+
+		tags = append(tags, tag)
+	}
+
+	if tags == nil {
+		tags = make([]Tag, 0)
+	}
+
+	tags_map := make(map[string]string)
+
+	for _, x := range tags {
+		tags_map[x.Name] = x.Id
+	}
+
+	return repository{db, tags_map}
 }
 
 type repository struct {
-	db *sqlx.DB
+	db         *sqlx.DB
+	tags_cache map[string]string
 }
 
 func (r repository) AddTask(task Task, session_id string) {
@@ -80,7 +113,7 @@ func (r repository) NewActivitySession(activity string) string {
 	return id
 }
 
-func (r repository) NewTaskSession(name, activity_id string, tag_ids []string) string {
+func (r repository) NewTaskSession(name, activity_id string, tag_names []string) string {
 
 	stmt, err := r.db.Preparex("INSERT INTO task_session(id, name,activity_session_id) values(?,?,?)")
 
@@ -91,7 +124,14 @@ func (r repository) NewTaskSession(name, activity_id string, tag_ids []string) s
 	session_id := uuid.New().String()
 	stmt.MustExec(session_id, name, activity_id)
 
-	for _, tag_id := range tag_ids {
+	for _, t := range tag_names {
+
+		if _, ok := r.tags_cache[t]; !ok {
+			r.tags_cache[t] = r.CreateTag(t)
+		}
+
+		tag_id := r.tags_cache[t]
+
 		stmt, err = r.db.Preparex("INSERT INTO task_session_tag(id, task_session_id,tag_id) values(?,?,?)")
 		if err != nil {
 			panic(err)
