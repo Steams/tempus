@@ -23,8 +23,8 @@ func init() {
 	time_layout = "03:04PM"
 	// os.Remove("/home/steams/Development/tempus/tempus_cli.db")
 
-	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
-	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
+	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
 
 	if err != nil {
 		panic(err)
@@ -52,6 +52,7 @@ type Backend struct {
 	_ func()                                         `signal:"clearList"`
 	_ func()                                         `signal:"clearTimeline"`
 	_ func()                                         `signal:"clearReports"`
+	_ func(string)                                   `signal:"dateChanged"`
 	_ func(string, string)                           `slot:"toggleStart"`
 	_ func()                                         `slot:"changeActivity"`
 	_ func(string)                                   `slot:"changeTask"`
@@ -169,12 +170,48 @@ func (b *Backend) dateForward() {
 	displayed_date = displayed_date.AddDate(0, 0, 1)
 
 	b.load()
+
+	y1, m1, d1 := displayed_date.Date()
+
+	y2, m2, d2 := time.Now().Date()
+
+	if y1 == y2 && m1 == m2 && d1 == d2 {
+		b.dateChanged("Today")
+		return
+	}
+
+	y2, m2, d2 = time.Now().AddDate(0, 0, -1).Date()
+
+	if y1 == y2 && m1 == m2 && d1 == d2 {
+		b.dateChanged("Yesterday")
+		return
+	}
+
+	b.dateChanged(displayed_date.Format("Mon, 02 Jan"))
+	fmt.Println(time.UnixDate)
 }
 
 func (b *Backend) dateBack() {
 	displayed_date = displayed_date.AddDate(0, 0, -1)
 
 	b.load()
+	y1, m1, d1 := displayed_date.Date()
+
+	y2, m2, d2 := time.Now().Date()
+
+	if y1 == y2 && m1 == m2 && d1 == d2 {
+		b.dateChanged("Today")
+		return
+	}
+
+	y2, m2, d2 = time.Now().AddDate(0, 0, -1).Date()
+
+	if y1 == y2 && m1 == m2 && d1 == d2 {
+		b.dateChanged("Yesterday")
+		return
+	}
+
+	b.dateChanged(displayed_date.Format("Mon, 02 Jan"))
 }
 
 func (b *Backend) load() {
@@ -200,6 +237,7 @@ func (b *Backend) changeActivity() {
 }
 
 func (b *Backend) changeTask(name string) {
+	b.pause()
 	b.timer.NewTask(name)
 
 	b.dispatchListUpdate()

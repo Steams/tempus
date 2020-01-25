@@ -66,6 +66,7 @@ ScrollView {
             startButton.source = "play.png"
             currentDuration.text =  "0 hrs 00 m"
         }
+        onDateChanged        : (title)        => dateTitle.text = title
     }
 
     anchors.fill: parent
@@ -269,6 +270,7 @@ ScrollView {
             }
 
             Text {
+                id: dateTitle
                 text: "Today :"
             }
 
