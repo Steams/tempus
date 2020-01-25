@@ -6,6 +6,7 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.12
 
 
+
 ScrollView {
     function durationToString(n) {
         var hours = Math.floor(n / 3600);
@@ -85,62 +86,6 @@ ScrollView {
         width: parent.width
         Layout.alignment: Qt.AlignTop
 
-        Rectangle {
-            height: 60
-            color: "grey"
-            border.color: "#E5E7EB"
-            border.width: 1
-            Layout.fillWidth: true
-
-            Item {
-                anchors.fill: parent
-
-                Repeater {
-                    anchors.fill: parent
-                    id: timelineRepeater
-
-                    model: ListModel {
-                        id: timeline
-
-                        /* ListElement {start: "start"; end: "end"; label: "Label here";duration: 2.5; startOffset: 0.0} */
-                    }
-
-                    ColumnLayout {
-                        width: (parent.width * (duration/16))
-                        x: (parent.width * (startOffset/16))
-
-                        Text {
-                            text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : start
-                            Layout.alignment: Qt.AlignLeft
-                            font.pixelSize:9
-                        }
-
-                        Button {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 10
-
-                            ToolTip.visible: hovered
-                            ToolTip.text: label + " | " + start +" - " + end + " | " + durationToString(duration* 3600)
-
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: "blue"
-                            }
-                        }
-
-                        Text {
-                            text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : end
-                            Layout.alignment: Qt.AlignRight
-                            font.pixelSize:9
-                        }
-
-                    }
-
-
-                }
-
-            }
-        }
 
 
         Rectangle {
@@ -229,7 +174,8 @@ ScrollView {
                     border.color: "#E5E7EB"
                     border.width: 1
                     color: "red"
-                    width: 70
+                    width: 80
+
 
                     Text {
                         text: name
@@ -259,161 +205,297 @@ ScrollView {
             }
         }
 
-        RowLayout {
-            Button {
-                Layout.preferredHeight: 20
-                Layout.preferredWidth : 20
-                text: "<"
-                onClicked: {
-                    backend.dateBack();
-                }
-            }
-
-            Text {
-                id: dateTitle
-                text: "Today :"
-            }
-
-            Button {
-                Layout.preferredHeight: 20
-                Layout.preferredWidth : 20
-                text: ">"
-                onClicked: {
-                    backend.dateForward();
-                }
-            }
-        }
-
-
-        /* DropShadow { */
-        /*     anchors.fill: thing */
-        /*     horizontalOffset: -1 */
-        /*     verticalOffset: 2 */
-        /*     radius: 1 */
-        /*     samples: 3 */
-        /*     color: "#3A4055" */
-        /*     source: thing */
-        /* } */
-
-        Repeater {
-            model: ListModel {
-                id: tasksList
-            }
-
-            Rectangle {
-                height: 70
-                border.color: "#E5E7EB"
-                Layout.preferredWidth: 700
-                Layout.alignment: Qt.AlignHCenter
-
-                border.width: 1
-                color: "white"
-                id: thing
-                x: 200
-                RowLayout {
-                    spacing: 60
-                    anchors.fill: parent
-
-                    ColumnLayout {
-                        Layout.leftMargin: 30
-
-                        Text {
-                            text: (start + " - " + end)
-                        }
-                        Text {
-                            text: duration
-                        }
-
-                    }
-
-                    ColumnLayout {
-                        Text {
-                            text: activityName
-                        }
-                        Text {
-                            text: taskName
-                        }
-
-                    }
-                }
-            }
-
-        }
-
         Rectangle {
-            border.color: "#E5E7EB"
-            Layout.preferredWidth: 250
-            Layout.alignment: Qt.AlignHCenter
-            border.width: 1
-            color: "white"
-            Layout.preferredHeight: 400
+            Layout.fillWidth: true
+            color: "#F5F7F8"
+            /* implicitHeight: content.implicitHeight */
+            height: 1000
+
 
             ColumnLayout {
-                id: report
-                spacing: 30
-                /* width: 400 */
-                /* Layout.preferredWidth: 400 */
-                width: parent.width
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 20
 
-                RowLayout {
-                    Text {
-                        text: "Total Activity"
-                    }
+                id: content
+                spacing: 10
 
-                    Text {
-                        id: totalLabel
-                        text: ""
-                    }
-                }
 
-                Repeater {
-                    Layout.fillWidth: true
-                    /* Layout.preferredWidth: 400 */
-                    /* width: 400 */
+                Rectangle {
+                    height: 30
+                    border.color: "#E5E7EB"
+                    Layout.preferredWidth: 250
+                    border.width: 1
+                    color: "white"
+                    radius: 12
 
-                    model: ListModel {
-                        id: reportList
+                    Row {
+                        anchors.left : parent.left
+                        anchors.right : parent.right
+                        anchors.verticalCenter: parent.verticalCenter
 
-                        /* ListElement {title: "Working"; duration: 2.5} */
-                        /* ListElement {title: "Project"; duration: 2} */
-                        /* ListElement {title: "Reading"; duration: 1} */
-                        /* ListElement {title: "Misc"; duration: 3.5} */
-                    }
+                        anchors.leftMargin: 20
+                        anchors.rightMargin: 20
 
-                    ColumnLayout {
-                        Layout.preferredWidth: parent.width
-                        /* Layout.fillWidth: true */
-                        /* Layout.preferredWidth: 400 */
-                        /* width: parent.width */
+
+                        height: 20
+
+                        Button {
+                            anchors.left: parent.left
+                            height: 20
+                            width : 20
+
+                            contentItem: Text {
+                                text: "<"
+                                color: "black"
+                            }
+
+                            background: Rectangle {
+                                color: "white"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    backend.dateBack();
+                                }
+                            }
+                        }
 
                         Text {
-                            text: title
+                            id: dateTitle
+                            text: "Today"
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
 
-                        RowLayout {
-                            /* Layout.fillWidth: true */
-                            Layout.preferredWidth: parent.width
+                        Button {
+                            anchors.right: parent.right
+                            height: 20
+                            width : 20
 
-                            Rectangle {
-                                Layout.alignment: Qt.AlignLeft
-                                color: "#2FCEC7"
-                                Layout.preferredWidth: (duration * (parent.width/8))
-                                Layout.preferredHeight: 5
+                            contentItem: Text {
+                                text: ">"
+                                color: "black"
                             }
 
-                            Text {
-                                Layout.alignment: Qt.AlignRight
-                                text: durationToString(duration* 3600)
-                                Layout.preferredWidth: 50
+                            background: Rectangle {
+                                color: "white"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    backend.dateForward();
+                                }
                             }
                         }
+
                     }
 
                 }
 
+                Rectangle {
+                    height: 49
+                    color: "grey"
+                    border.color: "#E5E7EB"
+                    border.width: 1
+                    Layout.preferredWidth: 1000
+
+                    Item {
+                        anchors.fill: parent
+
+                        Repeater {
+                            anchors.fill: parent
+                            id: timelineRepeater
+
+                            model: ListModel {
+                                id: timeline
+
+                                /* ListElement {start: "start"; end: "end"; label: "Label here";duration: 2.5; startOffset: 0.0} */
+                            }
+
+                            ColumnLayout {
+                                width: (parent.width * (duration/16))
+                                x: (parent.width * (startOffset/16))
+
+                                Text {
+                                    text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : start
+                                    Layout.alignment: Qt.AlignLeft
+                                    font.pixelSize:9
+                                }
+
+                                Button {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 10
+
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: label + " | " + start +" - " + end + " | " + durationToString(duration* 3600)
+
+                                    background: Rectangle {
+                                        anchors.fill: parent
+                                        color: "blue"
+                                    }
+                                }
+
+                                Text {
+                                    text: ((timelineRepeater.width * (duration/16)) < 40 ) ? "" : end
+                                    Layout.alignment: Qt.AlignRight
+                                    font.pixelSize:9
+                                }
+
+                            }
+
+
+                        }
+
+                    }
+                }
+
+                RowLayout {
+                    spacing: 20
+                    Layout.alignment: Qt.AlignHCenter
+
+                    Rectangle {
+                        Layout.alignment: Qt.AlignTop
+                        Layout.preferredWidth: 700
+                        color: "white"
+                        radius: 4
+
+                        height: 700
+                        /* implicitHeight: tasksContainer.implicitHeight */
+
+                        ColumnLayout {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 20
+                            anchors.rightMargin: 20
+
+                            Repeater {
+                                id: tasksContainer
+                                model: ListModel {
+                                    id: tasksList
+                                }
+
+                                Rectangle {
+                                    height: 70
+                                    Layout.preferredWidth: parent.width
+
+                                    RowLayout {
+                                        spacing: 60
+                                        anchors.fill: parent
+
+                                        ColumnLayout {
+                                            Layout.leftMargin: 30
+
+                                            Text {
+                                                text: (start + " - " + end)
+                                            }
+                                            Text {
+                                                text: duration
+                                            }
+
+                                        }
+
+                                        ColumnLayout {
+                                            Text {
+                                                text: activityName
+                                            }
+                                            Text {
+                                                text: taskName
+                                            }
+
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 300
+                        Layout.preferredHeight: 400
+                        color: "white"
+                        radius: 4
+                        Layout.alignment: Qt.AlignTop
+                        /* border.color: "#E5E7EB" */
+                        /* border.width: 1 */
+
+                        ColumnLayout {
+                            id: report
+                            spacing: 20
+                            /* width: 400 */
+                            /* Layout.preferredWidth: 400 */
+                            width: parent.width
+
+                            Row {
+                                Layout.leftMargin: 20
+                                Layout.rightMargin: 20
+                                Layout.topMargin: 20
+                                Layout.fillWidth: true
+
+                                Text {
+                                    text: "Total Activity"
+                                }
+
+                                Text {
+                                    id: totalLabel
+                                    text: ""
+                                    anchors.right: parent.right
+                                }
+                            }
+
+                            Repeater {
+                                Layout.fillWidth: true
+
+                                model: ListModel {
+                                    id: reportList
+
+                                    /* ListElement {title: "Working"; duration: 2.5} */
+                                }
+
+                                ColumnLayout {
+                                    Layout.preferredWidth: parent.width
+                                    Layout.leftMargin: 20
+                                    Layout.rightMargin: 20
+                                    Layout.topMargin: 20
+                                    /* Layout.fillWidth: true */
+                                    /* Layout.preferredWidth: 400 */
+                                    /* width: parent.width */
+
+                                    Text {
+                                        text: title
+                                    }
+
+                                    RowLayout {
+                                        /* Layout.fillWidth: true */
+                                        Layout.preferredWidth: parent.width
+
+                                        Rectangle {
+                                            Layout.alignment: Qt.AlignLeft
+                                            color: "#2FCEC7"
+                                            Layout.preferredWidth: (duration * (parent.width/4))
+                                            Layout.preferredHeight: 12
+                                            radius: 5
+                                        }
+
+                                        Text {
+                                            Layout.alignment: Qt.AlignRight
+                                            text: durationToString(duration* 3600)
+                                            Layout.preferredWidth: 50
+                                        }
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+                }
             }
         }
-
     }
 }
 
