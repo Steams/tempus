@@ -1,7 +1,6 @@
 package sqlite_repo
 
 import (
-	"fmt"
 	"log"
 	"tempus/pkg/activity"
 	"time"
@@ -70,7 +69,7 @@ func New(db *sqlx.DB) Repository {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("%+v\n", tag)
+		// fmt.Printf("%+v\n", tag)
 
 		tags = append(tags, tag)
 	}
@@ -181,8 +180,8 @@ func (r repository) GetTasksByDay(date time.Time) []TaskSession {
 	day_start := time.Date(year, month, day, 0, 0, 0, 0, date.Location())
 	day_end := time.Date(year, month, day, 24, 0, 0, 0, date.Location())
 
-	fmt.Println(day_start.Unix())
-	fmt.Println(day_end.Unix())
+	// fmt.Println(day_start.Unix())
+	// fmt.Println(day_end.Unix())
 
 	session_results, err := r.db.Queryx(`
 	SELECT t.id,t.name,a.name AS act_name
@@ -215,7 +214,7 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("%+v\n", session)
+		// fmt.Printf("%+v\n", session)
 
 		tasks := []Task{}
 
@@ -229,7 +228,7 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fmt.Printf("%+v\n", task)
+			// fmt.Printf("%+v\n", task)
 			tasks = append(tasks, Task{task.Name, time.Unix(task.Start, 0), time.Unix(task.End, 0)})
 		}
 
@@ -265,7 +264,7 @@ func (r repository) GetActivities() []ActivitySession {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("%+v\n", session)
+		// fmt.Printf("%+v\n", session)
 
 		tasks := r.GetTasksByActivity(session.id)
 
@@ -309,7 +308,7 @@ func (r repository) GetTags() []Tag {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Printf("%+v\n", tag)
+		// fmt.Printf("%+v\n", tag)
 
 		tags = append(tags, tag)
 	}

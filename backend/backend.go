@@ -80,7 +80,7 @@ func (b *Backend) dispatchListUpdate() {
 	b.clearList()
 
 	stuff := service.GetTasksByDay(displayed_date)
-	fmt.Println(stuff)
+	// fmt.Println(stuff)
 	for _, x := range stuff {
 		b.updateList(
 			x.Act_name,
@@ -117,9 +117,9 @@ func (b *Backend) dispatchReportUpdate() {
 		}
 	}
 
-	fmt.Println("-----------------------Activities")
-	fmt.Println(activities)
-	fmt.Println("-----------------------")
+	// fmt.Println("-----------------------Activities")
+	// fmt.Println(activities)
+	// fmt.Println("-----------------------")
 
 	b.clearReports()
 	for k, v := range activities {
@@ -134,14 +134,14 @@ func (b *Backend) dispatchTimelineUpdate() {
 	b.clearTimeline()
 
 	stuff := service.GetTasksByDay(displayed_date)
-	fmt.Println("Timeline stuff")
-	fmt.Println(stuff)
+	// fmt.Println("Timeline stuff")
+	// fmt.Println(stuff)
 
 	year, month, day := displayed_date.Date()
 	day_start := time.Date(year, month, day, 0, 0, 0, 0, time.Now().Location())
 	morning := day_start.Add(time.Hour * 8)
 
-	fmt.Println(morning.Format(time_layout))
+	// fmt.Println(morning.Format(time_layout))
 
 	for _, i := range stuff {
 		for _, x := range i.Tasks {
@@ -234,7 +234,7 @@ func (b *Backend) start(activity_name, task string) {
 	b.is_running = true
 	b.stopper = make(chan int)
 
-	fmt.Println(b.timer)
+	// fmt.Println(b.timer)
 
 	go b.runTimer()
 }
@@ -268,12 +268,12 @@ func (b *Backend) runTimer() {
 	for {
 		select {
 		case <-b.stopper:
-			fmt.Println("Stopping")
+			// fmt.Println("Stopping")
 			return
 		default:
 			time.Sleep(time.Second)
 			b.timer.UpdateDuration()
-			fmt.Println(b.timer)
+			// fmt.Println(b.timer)
 			t := b.timer.GetDuration()
 			b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
 

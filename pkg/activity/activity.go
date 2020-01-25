@@ -1,7 +1,6 @@
 package activity
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -119,9 +118,6 @@ func (t *timer_impl) UpdateDuration() {
 
 func (t *timer_impl) SetTags(tags []string) {
 	t.current_tags = tags
-	fmt.Println("_________________________________________--tags Set-----------------------------")
-	fmt.Println(t.current_tags)
-	fmt.Println("_________________________________________--tags done-----------------------------")
 }
 
 func (t *timer_impl) Pause() {
@@ -147,6 +143,15 @@ func (t *timer_impl) GetDuration() time.Duration {
 }
 
 func (t *timer_impl) NewTask(task_name string) {
+
+	if t.activity_id == "" {
+		t.activity_id = t.repo.NewActivitySession(t.activity_name)
+	}
+
+	if t.current_task_session_id == "" {
+		t.current_task_session_id = t.repo.NewTaskSession(t.current_task.name, t.activity_id, t.current_tags)
+	}
+
 	task := t.current_task.end()
 	t.repo.AddTask(task, t.current_task_session_id)
 
