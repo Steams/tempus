@@ -180,9 +180,6 @@ func (r repository) GetTasksByDay(date time.Time) []TaskSession {
 	day_start := time.Date(year, month, day, 0, 0, 0, 0, date.Location())
 	day_end := time.Date(year, month, day, 24, 0, 0, 0, date.Location())
 
-	// fmt.Println(day_start.Unix())
-	// fmt.Println(day_end.Unix())
-
 	session_results, err := r.db.Queryx(`
 	SELECT t.id,t.name,a.name AS act_name
 	FROM task_session AS t
@@ -209,6 +206,7 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 		session := TaskSessionScanner{}
 
 		// NOTE i dont like that StructScan requires the name of the struct field to match the name of the response label in the sql
+		// NOTE You might be able to use db.Select directly into an array instead
 		err := results.StructScan(&session)
 
 		if err != nil {
@@ -234,15 +232,6 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 
 		tags := []string{}
 
-		// tag_results, err := db.Queryx(`
-		// SELECT tag.name
-		// FROM tag
-		// INNER JOIN task_session_tag
-		//   ON task_session_tag.tag_id = tag.id
-		// WHERE task_session_tag.task_session_id = $1
-		// GROUP BY tag.id
-		// `, session.Id)
-
 		db.Select(&tags, `
 		SELECT tag.name
 		FROM tag
@@ -251,19 +240,6 @@ func extractTaskSessions(results *sqlx.Rows, db *sqlx.DB) []TaskSession {
 		WHERE task_session_tag.task_session_id = $1
 		GROUP BY tag.id
 		`, session.Id)
-
-		// for tag_results.Next() {
-		// 	tag := ""
-
-		// 	tt, _ := task_results.SliceScan()
-		// 	tags, _ = tt.([]string)
-
-		// 	if err != nil {
-		// 		log.Fatalln(err)
-		// 	}
-		// 	// fmt.Printf("%+v\n", task)
-		// 	// tags = append(tags, tag)
-		// }
 
 		sessions = append(sessions, TaskSession{session.Id, session.Name, session.Act_name, tasks, tags})
 	}

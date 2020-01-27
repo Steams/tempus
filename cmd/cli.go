@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"tempus/pkg/activity"
 	activity_repo "tempus/pkg/activity/sqlite_repo"
 	"time"
 
@@ -34,17 +35,17 @@ func run() error {
 	// db.MustExec(activity_repo.Schema)
 	repo := activity_repo.New(db)
 
-	tasks := repo.GetTasksByDay(time.Now().AddDate(0, 0, -1))
-	for _, x := range tasks {
-		fmt.Println(x.Name)
-		fmt.Println(x.Tags)
-	}
+	// tasks := repo.GetTasksByDay(time.Now())
+	// for _, x := range tasks {
+	// 	fmt.Println(x.Name)
+	// 	fmt.Println(x.Tags)
+	// }
 
-	// activity_id := repo.NewActivitySession("Project")
+	activity_id := repo.NewActivitySession("Work")
 
-	// task_session_id := repo.NewTaskSession("Tempus : refactoring tag id caching system", activity_id, []string{"Go", "Tempus"})
+	task_session_id := repo.NewTaskSession("Appraisal : Add row border color based on status and ALL filter tab ", activity_id, []string{})
 
-	// repo.AddTask(activity.Task{"Tempus : refactoring tag id caching system", time.Now().Add(time.Minute * (-40)), time.Now()}, task_session_id)
+	repo.AddTask(activity.Task{"Appraisal : Add row border color based on status and ALL filter tab ", time.Now().Add(time.Minute * (-40)), time.Now()}, task_session_id)
 
 	return nil
 }

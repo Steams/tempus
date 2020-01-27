@@ -89,31 +89,116 @@ ScrollView {
 
 
         Rectangle {
-            height: 60
+            height: 200
             color: "white"
             border.color: "#E5E7EB"
             border.width: 1
             Layout.fillWidth: true
 
 
-            RowLayout {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width
+            ColumnLayout {
+                width: 1020
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top : parent.top
+                anchors.topMargin: 20
+                spacing: 0
 
-                ComboBox {
-                    width: 200
-                    implicitHeight: 50
-                    Layout.leftMargin: 30
+                Row {
+                    spacing: 100
 
-                    model: [ "Work", "Project", "Reading","Misc"]
-                    id: activity
-                    onCurrentIndexChanged: {
-                        backend.changeActivity()
+                    ComboBox {
+                        width: 120
+                        implicitHeight: 30
+
+                        model: [ "Work", "Project", "Reading","Misc"]
+                        id: activity
+                        font.pixelSize: 20
+                        font.bold: true
+
+                        onCurrentIndexChanged: {
+                            backend.changeActivity()
+                        }
+
+                        background: Rectangle {
+                            implicitWidth: 120
+                            implicitHeight: 30
+                            border.color: activity.pressed ? "#17a81a" : "#21be2b"
+                            border.width: 0
+                        }
+
+                        contentItem: Text {
+                            leftPadding: 0
+                            rightPadding: activity.indicator.width + activity.spacing
+
+                            text: activity.displayText
+                            font: activity.font
+                            color: "#AAB1BA" 
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+
+                        indicator: Canvas {
+                            id: canvas
+                            x: activity.width - width - activity.rightPadding
+                            y: activity.topPadding + (activity.availableHeight - height) / 2
+                            width: 12
+                            height: 8
+                            contextType: "2d"
+
+                            Connections {
+                                target: activity
+                                onPressedChanged: canvas.requestPaint()
+                            }
+
+                            onPaint: {
+                                context.reset();
+                                context.moveTo(0, 0);
+                                context.lineTo(width, 0);
+                                context.lineTo(width / 2, height);
+                                context.closePath();
+                                context.fillStyle = activity.pressed ? "#17a81a" : "#21be2b";
+                                context.fill();
+                            }
+                        }
                     }
 
-                    /* ToolTip.visible: hovered */
-                    /* ToolTip.text: "Save the active project" */
+                    Rectangle {
+                        height: 30
+                        width: 150
+                        color: "#a3b4b7"
+                        radius: 15
+
+                        RowLayout {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Image {
+                                id: startButton
+                                source: "play.png"
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        backend.toggleStart(activity.currentText,task.text)
+                                        /* backend.load(); */
+                                    }
+                                }
+                            }
+                            Text {
+                                id: currentDuration
+                                text: "0 h 0 m 0 s"
+                                font.weight: Font.Bold
+                                Layout.fillWidth: true
+                                color: "white"
+                            }
+
+                        }
+                    }
                 }
+
 
                 TextField {
                     id: task
@@ -126,34 +211,60 @@ ScrollView {
                     Keys.onReturnPressed: {
                         backend.changeTask(task.text)
                     }
+                    placeholderText: "What are you working on..."
+                    color: "#303B45"
+                    font.pixelSize: 25
+
+                    background: Rectangle {
+                        implicitWidth: 200
+                        implicitHeight: 40
+                        border.width: 0
+                    }
+
                 }
 
 
-                Text {
-                    id: currentDuration
-                    text: "0 hrs 00 m"
-                    font.weight: Font.Bold
-                    horizontalAlignment: Text.AlignHCenter
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
-                }
+                RowLayout {
 
-
-                Image {
-                    id: startButton
-                    source: "play.png"
-                    Layout.preferredWidth: 30
-                    Layout.preferredHeight: 30
-                    Layout.alignment: Qt.AlignRight
-                    Layout.rightMargin: 30
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            backend.toggleStart(activity.currentText,task.text)
-                            /* backend.load(); */
+                    Repeater {
+                        model: ListModel {
+                            id: tagsList
                         }
+
+                        Rectangle {
+                            height: 27
+                            width: 110
+                            color: "#F0F5FF"
+                            radius: 12
+
+                            Text {
+                                text: name
+                                color: "#5989E8"
+                                font.bold: true
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+
+                    }
+
+                    TextField {
+                        id: tagInput
+
+                        Layout.preferredHeight: 27
+                        width: 200
+
+                        color: "#303B45"
+                        placeholderText: "Add tags..."
+
+                        Keys.onReturnPressed: {
+                            backend.addTag(tagInput.text)
+                        }
+
+                        background: Rectangle {
+                            border.width: 0
+                        }
+
                     }
                 }
 
@@ -162,48 +273,6 @@ ScrollView {
         }
 
 
-        RowLayout {
-
-            Repeater {
-                model: ListModel {
-                    id: tagsList
-                }
-
-                Rectangle {
-                    height: 20
-                    border.color: "#E5E7EB"
-                    border.width: 1
-                    color: "red"
-                    width: 80
-
-
-                    Text {
-                        text: name
-                    }
-                }
-
-            }
-
-            Button {
-                Layout.preferredHeight: 20
-                Layout.preferredWidth : 20
-                text: "+"
-                onClicked: {
-                    backend.addTag(tagInput.text)
-                }
-            }
-
-            TextField {
-                id: tagInput
-                text: ""
-                cursorVisible: true
-                Layout.preferredHeight: 50
-                width: 200
-
-                Keys.onReturnPressed: {
-                }
-            }
-        }
 
         Rectangle {
             Layout.fillWidth: true
@@ -301,7 +370,7 @@ ScrollView {
                     color: "grey"
                     border.color: "#E5E7EB"
                     border.width: 1
-                    Layout.preferredWidth: 1000
+                    Layout.preferredWidth: 1020
 
                     Item {
                         anchors.fill: parent
@@ -396,7 +465,7 @@ ScrollView {
                                             Layout.preferredHeight: 10
 
                                             Text {
-                                                text: "Work / 9:14AM - 11:33PM"
+                                                text: activityName + " / " + (start + " - " + end)
                                                 anchors.left: parent.left
                                             }
 
@@ -432,9 +501,9 @@ ScrollView {
                                             Repeater {
                                                 model: ListModel {
                                                     id: tagslist
-                                                    ListElement {title: "Haskell" }
-                                                    ListElement {title: "Go" }
-                                                    ListElement {title: "Tempus" }
+                                                    /* ListElement {title: "Haskell" } */
+                                                    /* ListElement {title: "Go" } */
+                                                    /* ListElement {title: "Tempus" } */
 
                                                 }
                                                 Rectangle {

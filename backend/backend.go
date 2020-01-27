@@ -313,7 +313,7 @@ func (b *Backend) runTimer() {
 			b.timer.UpdateDuration()
 			// fmt.Println(b.timer)
 			t := b.timer.GetDuration()
-			b.timeChanged(fmt.Sprintf("%d hrs %d min %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
+			b.timeChanged(fmt.Sprintf("%d h %d m %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
 
 		}
 	}
