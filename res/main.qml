@@ -8,18 +8,28 @@ import QtGraphicalEffects 1.12
 
 
 ScrollView {
+    function activityToColor(a) {
+        const act_colors = {
+            "Work":"#6ADAF4",
+            "Project":"#7E6AF5",
+            "Reading":"#f2bb6a",
+            "Misc":"#FE602F",
+        }
+        return act_colors[a]
+    }
+
     function durationToString(n) {
         var hours = Math.floor(n / 3600);
         var remaining = n % 3600;
         var minutes = Math.floor(remaining / 60);
         var seconds = remaining % 60;
-        return hours + " h " + minutes + " m "
+        return hours + " h " + (minutes < 10 ? "0":"") + minutes + " m "
     }
 
     Backend {
         id: backend
         onTimeChanged       : (seconds) => currentDuration.text = seconds
-        onUpdateTimeline        : (start,end,dur,label,offset) => {
+        onUpdateTimeline        : (start,end,dur,label,offset,act) => {
             console.log(start)
             console.log(end)
             console.log(label)
@@ -32,15 +42,18 @@ ScrollView {
                 "label":label,
                 "duration":dur,
                 "startOffset":offset,
+                "activityName":act,
             })
         }
-        onUpdateList        : (act,tsk,strt,end,dur) => tasksList.append({
-            "activityName":act,
-            "taskName":tsk,
-            "start":strt,
-            "end":end,
-            "duration":dur,
-        })
+        onUpdateList        : (act,tsk,strt,end,dur) => {
+            tasksList.append({
+                "activityName":act,
+                "taskName":tsk,
+                "start":strt,
+                "end":end,
+                "duration":dur,
+            })
+        }
         onUpdateReport       : (act,dur) => {
             reportList.append({
                 "title":act,
@@ -77,7 +90,21 @@ ScrollView {
     ScrollBar.vertical.policy: ScrollBar.AlwaysOn
     ScrollBar.vertical.interactive: true
     clip: true
-    Component.onCompleted: backend.load()
+    Component.onCompleted: {
+        backend.load()
+
+        /* tasksList.append({ */
+        /*     "activityName":"Test", */
+        /*     "taskName":"Testing using lists of values in repeater", */
+        /*     "start":"12:04", */
+        /*     "end":"11:35", */
+        /*     "duration":12149, */
+        /*     "tags":["12"], */
+        /*     "obj":{"ass":"asdas"}, */
+        /*     "arrt":["oopopo"], */
+        /*     "poop":"poop", */
+        /* }) */
+    }
 
 
     ColumnLayout {
@@ -165,7 +192,8 @@ ScrollView {
                     Rectangle {
                         height: 30
                         width: 150
-                        color: "#a3b4b7"
+                        /* color: "#a3b4b7" */
+                        color: "#F78770"
                         radius: 15
 
                         RowLayout {
@@ -366,14 +394,17 @@ ScrollView {
                 }
 
                 Rectangle {
-                    height: 49
-                    color: "grey"
-                    border.color: "#E5E7EB"
-                    border.width: 1
+                    height: 50
+                    color: "white"
                     Layout.preferredWidth: 1020
+                    /* Layout.bottomMargin: 20 */
+                    clip: false
 
                     Item {
-                        anchors.fill: parent
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 50
 
                         Repeater {
                             anchors.fill: parent
@@ -404,7 +435,8 @@ ScrollView {
 
                                     background: Rectangle {
                                         anchors.fill: parent
-                                        color: "blue"
+                                        /* color: "blue" */
+                                        color: activityToColor(activityName)
                                     }
                                 }
 
@@ -448,13 +480,21 @@ ScrollView {
                                 id: tasksContainer
                                 model: ListModel {
                                     id: tasksList
+                                    /* ListElement { */
+                                    /*     activityName:"test"; */
+                                    /*     taskName:"Testing testingtesting "; */
+                                    /*     start:"12:12"; */
+                                    /*     end:"11:35"; */
+                                    /*     duration:11931111 */
+                                    /* } */
                                 }
 
                                 Rectangle {
-                                    height: 60
+                                    height: 66
                                     Layout.preferredWidth: parent.width
-                                    border.width: 1
+                                    border.width: 0
                                     border.color: "#E5E7EB"
+
 
                                     ColumnLayout {
                                         width: parent.width
@@ -465,56 +505,67 @@ ScrollView {
                                             Layout.preferredHeight: 10
 
                                             Text {
-                                                text: activityName + " / " + (start + " - " + end)
+                                                /* text: (start + " - " + end) +  " | "  +activityName */
+                                                text: (start + " - " + end)
                                                 anchors.left: parent.left
+                                                font.bold: true
+                                                color: "#a3b4b7"
                                             }
 
                                             Text {
-                                                text: duration
+                                                text: durationToString(duration)
                                                 anchors.right: parent.right
+                                                color: "#a3b4b7"
+                                                font.bold: true
                                             }
-
-                                            /* ColumnLayout { */
-                                            /*     Layout.leftMargin: 30 */
-
-                                            /*     Text { */
-                                            /*         text: (start + " - " + end) */
-                                            /*     } */
-                                            /*     Text { */
-                                            /*         text: duration */
-                                            /*     } */
-
-                                            /* } */
-
                                         }
 
                                         Text {
-                                            Layout.preferredHeight: 10
+                                            Layout.preferredHeight: 16
                                             text: taskName
+                                            font.pixelSize: 16
                                         }
 
-
-                                        RowLayout {
+                                        Row {
                                             Layout.preferredHeight: 20
-                                            Layout.alignment: Qt.AlignRight
+                                            Layout.fillWidth: true
 
-                                            Repeater {
-                                                model: ListModel {
-                                                    id: tagslist
-                                                    /* ListElement {title: "Haskell" } */
-                                                    /* ListElement {title: "Go" } */
-                                                    /* ListElement {title: "Tempus" } */
+                                            Text {
+                                                text: activityName
+                                                anchors.left: parent.left
+                                                font.bold: true
+                                                /* color: "#B8BEC5" */
+                                                color: activityToColor(activityName)
+                                            }
 
-                                                }
-                                                Rectangle {
-                                                    height: 20
-                                                    width: 70
-                                                    color: "red"
-                                                    radius: 10
 
-                                                    Text {
-                                                        text: title
-                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                            RowLayout {
+                                                height: 20
+                                                anchors.right: parent.right
+
+                                                Repeater {
+                                                    /* model: tags */
+                                                    model: ListModel {
+                                                        id: tagslist
+                                                        /* ListElement {title: "Haskell" } */
+                                                        /* ListElement {title: "Go" } */
+                                                        /* ListElement {title: "Tempus" } */
+
+                                                    }
+
+                                                    Rectangle {
+                                                        height: 20
+                                                        width: 80
+                                                        color: "#F0F5FF"
+                                                        radius: 12
+
+                                                        Text {
+                                                            text: title
+                                                            color: "#5989E8"
+                                                            font.bold: true
+                                                            anchors.horizontalCenter: parent.horizontalCenter
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                        }
                                                     }
                                                 }
                                             }
@@ -564,8 +615,6 @@ ScrollView {
 
                                 model: ListModel {
                                     id: reportList
-
-                                    /* ListElement {title: "Working"; duration: 2.5} */
                                 }
 
                                 ColumnLayout {
@@ -587,7 +636,8 @@ ScrollView {
 
                                         Rectangle {
                                             Layout.alignment: Qt.AlignLeft
-                                            color: "#2FCEC7"
+                                            /* color: "#2FCEC7" */
+                                            color: activityToColor(title)
                                             Layout.preferredWidth: (duration * (parent.width/4))
                                             Layout.preferredHeight: 12
                                             radius: 5
@@ -600,9 +650,7 @@ ScrollView {
                                         }
                                     }
                                 }
-
                             }
-
                         }
                     }
                 }

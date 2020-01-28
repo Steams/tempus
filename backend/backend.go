@@ -41,25 +41,25 @@ func init() {
 
 type Backend struct {
 	qamel.QmlObject
-	_ func(string)                                   `signal:"timeChanged"`
-	_ func()                                         `signal:"signalPause"`
-	_ func()                                         `signal:"signalStop"`
-	_ func()                                         `signal:"signalStart"`
-	_ func(string, string, string, string, string)   `signal:"updateList"`
-	_ func(string, string, float64, string, float64) `signal:"updateTimeline"`
-	_ func(string, float64)                          `signal:"updateReport"`
-	_ func(string)                                   `signal:"tagAdded"`
-	_ func()                                         `signal:"clearList"`
-	_ func()                                         `signal:"clearTimeline"`
-	_ func()                                         `signal:"clearReports"`
-	_ func(string)                                   `signal:"dateChanged"`
-	_ func(string, string)                           `slot:"toggleStart"`
-	_ func()                                         `slot:"changeActivity"`
-	_ func(string)                                   `slot:"changeTask"`
-	_ func()                                         `slot:"load"`
-	_ func()                                         `slot:"dateBack"`
-	_ func()                                         `slot:"dateForward"`
-	_ func(string)                                   `slot:"addTag"`
+	_ func(string)                                           `signal:"timeChanged"`
+	_ func()                                                 `signal:"signalPause"`
+	_ func()                                                 `signal:"signalStop"`
+	_ func()                                                 `signal:"signalStart"`
+	_ func(string, string, string, string, float64)          `signal:"updateList"`
+	_ func(string, string, float64, string, float64, string) `signal:"updateTimeline"`
+	_ func(string, float64)                                  `signal:"updateReport"`
+	_ func(string)                                           `signal:"tagAdded"`
+	_ func()                                                 `signal:"clearList"`
+	_ func()                                                 `signal:"clearTimeline"`
+	_ func()                                                 `signal:"clearReports"`
+	_ func(string)                                           `signal:"dateChanged"`
+	_ func(string, string)                                   `slot:"toggleStart"`
+	_ func()                                                 `slot:"changeActivity"`
+	_ func(string)                                           `slot:"changeTask"`
+	_ func()                                                 `slot:"load"`
+	_ func()                                                 `slot:"dateBack"`
+	_ func()                                                 `slot:"dateForward"`
+	_ func(string)                                           `slot:"addTag"`
 
 	is_running   bool
 	is_paused    bool
@@ -68,12 +68,12 @@ type Backend struct {
 	current_tags []string
 }
 
-func duration(tasks []activity.Task) string {
+func duration(tasks []activity.Task) float64 {
 	var sum time.Duration = 0
 	for _, x := range tasks {
 		sum = sum + x.End.Sub(x.Start)
 	}
-	return sum.String()
+	return sum.Seconds()
 }
 
 func (b *Backend) dispatchListUpdate() {
@@ -153,6 +153,7 @@ func (b *Backend) dispatchTimelineUpdate() {
 				x.End.Sub(x.Start).Hours(),
 				i.Act_name+" : "+x.Name,
 				x.Start.Sub(morning).Hours(),
+				i.Act_name,
 			)
 		}
 	}

@@ -17,8 +17,8 @@ func runQtApp(argc int, argv []string) {
 
 	view := qamel.NewViewerWithSource("qrc:/res/main.qml")
 	view.SetResizeMode(qamel.SizeRootObjectToView)
-	view.SetHeight(600)
-	view.SetWidth(800)
+	view.SetHeight(800)
+	view.SetWidth(1200)
 	view.Show()
 
 	app.Exec()
