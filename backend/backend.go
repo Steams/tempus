@@ -23,8 +23,8 @@ func init() {
 	time_layout = "03:04PM"
 	// os.Remove("/home/steams/Development/tempus/tempus_cli.db")
 
-	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
-	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
+	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
 
 	if err != nil {
 		panic(err)
@@ -238,10 +238,10 @@ func (b *Backend) changeActivity() {
 }
 
 func (b *Backend) changeTask(name string) {
-	b.pause()
 	b.timer.NewTask(name)
-
 	b.dispatchListUpdate()
+	// b.pause()
+
 }
 
 func (b *Backend) toggleStart(act_name, task_name string) {

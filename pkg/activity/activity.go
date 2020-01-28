@@ -122,6 +122,7 @@ func (t *timer_impl) SetTags(tags []string) {
 }
 
 func (t *timer_impl) Pause() {
+	t.paused = true
 
 	if t.activity_id == "" {
 		t.activity_id = t.repo.NewActivitySession(t.activity_name)
@@ -136,7 +137,10 @@ func (t *timer_impl) Pause() {
 }
 
 func (t *timer_impl) Continue() {
-	t.current_task = task_starter{t.current_task.name, time.Now()}
+	if t.paused {
+		t.current_task = task_starter{t.current_task.name, time.Now()}
+		t.paused = false
+	}
 }
 
 func (t *timer_impl) GetDuration() time.Duration {
@@ -151,6 +155,12 @@ func (t *timer_impl) NewTask(task_name string) {
 
 	if t.current_task_session_id == "" {
 		t.current_task_session_id = t.repo.NewTaskSession(t.current_task.name, t.activity_id, t.current_tags)
+	}
+
+	if t.paused {
+		t.current_task_session_id = t.repo.NewTaskSession(task_name, t.activity_id, t.current_tags)
+		t.current_task = task_starter{task_name, time.Now()}
+		return
 	}
 
 	task := t.current_task.end()
