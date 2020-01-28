@@ -260,10 +260,12 @@ func (b *Backend) toggleStart(act_name, task_name string) {
 		return
 	}
 
-	fmt.Println("is stop, now start")
+	if task_name != "" {
+		fmt.Println("is stop, now start")
 
-	b.start(act_name, task_name)
-	b.signalStart()
+		b.start(act_name, task_name)
+		b.signalStart()
+	}
 
 }
 
