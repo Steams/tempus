@@ -189,6 +189,7 @@ func (r repository) GetTasksByDay(date time.Time) []TaskSession {
 	  ON task.task_session_id = t.id
 	WHERE task.start BETWEEN $1 AND $2
 	GROUP BY t.id
+	ORDER BY task.start DESC
 	`, day_start.Unix(), day_end.Unix())
 
 	if err != nil {
