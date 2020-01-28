@@ -290,9 +290,11 @@ func (b *Backend) pause() {
 }
 
 func (b *Backend) stop() {
+
 	fmt.Println("Stopping")
 	b.timer.Pause()
-	b.stopper <- 1
+	go func() { b.stopper <- 1 }()
+	// b.stopper <- 1
 	b.is_paused = false
 	b.is_running = false
 
@@ -307,17 +309,24 @@ func (b *Backend) cont() {
 }
 
 func (b *Backend) runTimer() {
+	second_tracker := time.Nanosecond * 0
+	tenth := (time.Nanosecond * 100000000)
+	second_ := (time.Nanosecond * 1000000000)
+
 	for {
 		select {
 		case <-b.stopper:
-			// fmt.Println("Stopping")
 			return
+
 		default:
-			time.Sleep(time.Second)
-			b.timer.UpdateDuration()
-			// fmt.Println(b.timer)
-			t := b.timer.GetDuration()
-			b.timeChanged(fmt.Sprintf("%d h %d m %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
+			time.Sleep(tenth)
+			second_tracker = second_tracker + tenth
+			if second_tracker == second_ {
+				b.timer.UpdateDuration()
+				t := b.timer.GetDuration()
+				b.timeChanged(fmt.Sprintf("%d h %d m %d s", int(t.Hours()), int(t.Minutes())%60, int(t.Seconds())%60))
+				second_tracker = time.Nanosecond * 0
+			}
 
 		}
 	}
