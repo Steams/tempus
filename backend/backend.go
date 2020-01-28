@@ -238,10 +238,11 @@ func (b *Backend) changeActivity() {
 }
 
 func (b *Backend) changeTask(name string) {
-	b.timer.NewTask(name)
-	b.dispatchListUpdate()
-	// b.pause()
-
+	if b.is_running {
+		b.timer.NewTask(name)
+		b.dispatchListUpdate()
+		return
+	}
 }
 
 func (b *Backend) toggleStart(act_name, task_name string) {
