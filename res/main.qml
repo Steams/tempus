@@ -28,8 +28,8 @@ ScrollView {
 
     Backend {
         id: backend
-        onTimeChanged       : (seconds) => currentDuration.text = seconds
-        onUpdateTimeline        : (start,end,dur,label,offset,act) => {
+        onTimeChanged          : (seconds)                            => currentDuration.text = seconds
+        onUpdateTimeline       : (start,end,dur,label,offset,act) => {
             console.log(start)
             console.log(end)
             console.log(label)
@@ -37,27 +37,27 @@ ScrollView {
             console.log(offset)
 
             timeline.append({
-                "start":start,
-                "end":end,
-                "label":label,
-                "duration":dur,
-                "startOffset":offset,
-                "activityName":act,
+                "start"        :start,
+                "end"          :end,
+                "label"        :label,
+                "duration"     :dur,
+                "startOffset"  :offset,
+                "activityName" :act,
             })
         }
-        onUpdateList        : (act,tsk,strt,end,dur) => {
+        onUpdateList           : (act,tsk,strt,end,dur)               => {
             tasksList.append({
-                "activityName":act,
-                "taskName":tsk,
-                "start":strt,
-                "end":end,
-                "duration":dur,
+                "activityName" :act,
+                "taskName"     :tsk,
+                "start"        :strt,
+                "end"          :end,
+                "duration"     :dur,
             })
         }
-        onUpdateReport       : (act,dur) => {
+        onUpdateReport         : (act,dur)                           => {
             reportList.append({
-                "title":act,
-                "duration":dur,
+                "title"        :act,
+                "duration"     :dur,
             })
 
             var sum = 0;
@@ -68,19 +68,21 @@ ScrollView {
             }
             totalLabel.text = durationToString(sum * 3600)
         }
-        onTagAdded        : (name) => tagsList.append({
-            "name":name,
-        })
-        onClearList         : ()        => tasksList.clear()
-        onClearTimeline         : ()        => timeline.clear()
-        onClearReports         : ()        => reportList.clear()
-        onSignalStart       : ()        => startButton.source = "pause.png"
-        onSignalPause       : ()        => startButton.source = "play.png"
-        onSignalStop        : ()        => {
+        onTagAdded      : (name) => {
+            tagInput.text = ""
+            tagsList.append({"name":name})
+        }
+        onClearTags     : () => tagsList.clear()
+        onClearList     : () => tasksList.clear()
+        onClearTimeline : () => timeline.clear()
+        onClearReports  : () => reportList.clear()
+        onSignalStart   : () => startButton.source = "pause.png"
+        onSignalPause   : () => startButton.source = "play.png"
+        onSignalStop    : () => {
             startButton.source = "play.png"
             currentDuration.text =  "0 hrs 00 m"
         }
-        onDateChanged        : (title)        => dateTitle.text = title
+        onDateChanged        : (title)                             => dateTitle.text = title
     }
 
     anchors.fill: parent
@@ -271,6 +273,24 @@ ScrollView {
                                 font.bold: true
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Image {
+                                source: "close.png"
+                                width: 12
+                                height: 12
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.rightMargin: 10
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        backend.deleteTag(index)
+                                        tagsList.remove(index,1)
+                                    }
+                                }
                             }
                         }
 

@@ -23,8 +23,8 @@ func init() {
 	time_layout = "03:04PM"
 	// os.Remove("/home/steams/Development/tempus/tempus_cli.db")
 
-	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
-	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
+	db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus.db")
+	// db, err := sqlx.Open("sqlite3", "/home/steams/Development/tempus/tempus_cli.db")
 
 	if err != nil {
 		panic(err)
@@ -51,6 +51,7 @@ type Backend struct {
 	_ func(string)                                           `signal:"tagAdded"`
 	_ func()                                                 `signal:"clearList"`
 	_ func()                                                 `signal:"clearTimeline"`
+	_ func()                                                 `signal:"clearTags"`
 	_ func()                                                 `signal:"clearReports"`
 	_ func(string)                                           `signal:"dateChanged"`
 	_ func(string, string)                                   `slot:"toggleStart"`
@@ -60,6 +61,7 @@ type Backend struct {
 	_ func()                                                 `slot:"dateBack"`
 	_ func()                                                 `slot:"dateForward"`
 	_ func(string)                                           `slot:"addTag"`
+	_ func(int)                                              `slot:"deleteTag"`
 
 	is_running   bool
 	is_paused    bool
@@ -159,6 +161,12 @@ func (b *Backend) dispatchTimelineUpdate() {
 	}
 
 }
+func (b *Backend) deleteTag(i int) {
+	fmt.Print(b.current_tags)
+	b.current_tags = append(b.current_tags[:i], b.current_tags[i+1:]...)
+	fmt.Print(b.current_tags)
+}
+
 func (b *Backend) addTag(tag string) {
 	b.current_tags = append(b.current_tags, tag)
 	if b.timer != nil {
@@ -235,6 +243,8 @@ func (b *Backend) changeActivity() {
 	if b.is_running {
 		b.stop()
 	}
+
+	b.clearTags()
 }
 
 func (b *Backend) changeTask(name string) {
@@ -294,7 +304,6 @@ func (b *Backend) stop() {
 	fmt.Println("Stopping")
 	b.timer.Pause()
 	go func() { b.stopper <- 1 }()
-	// b.stopper <- 1
 	b.is_paused = false
 	b.is_running = false
 
