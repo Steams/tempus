@@ -11,6 +11,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"encoding/json"
+
 	"github.com/go-qamel/qamel"
 )
 
@@ -45,7 +47,7 @@ type Backend struct {
 	_ func()                                                 `signal:"signalPause"`
 	_ func()                                                 `signal:"signalStop"`
 	_ func()                                                 `signal:"signalStart"`
-	_ func(string, string, string, string, float64)          `signal:"updateList"`
+	_ func(string, string, string, string, float64, string)  `signal:"updateList"`
 	_ func(string, string, float64, string, float64, string) `signal:"updateTimeline"`
 	_ func(string, float64)                                  `signal:"updateReport"`
 	_ func(string)                                           `signal:"tagAdded"`
@@ -85,12 +87,14 @@ func (b *Backend) dispatchListUpdate() {
 	stuff := service.GetTasksByDay(displayed_date)
 	// fmt.Println(stuff)
 	for _, x := range stuff {
+		tags, _ := json.Marshal(x.Tags)
 		b.updateList(
 			x.Act_name,
 			x.Name,
 			x.Tasks[0].Start.Format(time_layout),
 			x.Tasks[len(x.Tasks)-1].End.Format(time_layout),
 			duration(x.Tasks),
+			string(tags),
 		)
 	}
 }

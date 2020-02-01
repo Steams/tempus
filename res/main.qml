@@ -45,13 +45,21 @@ ScrollView {
                 "activityName" :act,
             })
         }
-        onUpdateList           : (act,tsk,strt,end,dur)               => {
+        onUpdateList           : (act,tsk,strt,end,dur,tags)               => {
+            var tags_array = JSON.parse(tags)
+            var tagsModel = [];
+
+            for(var i = 0; i < tags_array.length; i++){
+                tagsModel[i] = {"title":tags_array[i]}
+            }
+
             tasksList.append({
                 "activityName" :act,
                 "taskName"     :tsk,
                 "start"        :strt,
                 "end"          :end,
                 "duration"     :dur,
+                "tags" : tagsModel
             })
         }
         onUpdateReport         : (act,dur)                           => {
@@ -564,14 +572,15 @@ ScrollView {
                                                 anchors.right: parent.right
 
                                                 Repeater {
-                                                    /* model: tags */
-                                                    model: ListModel {
-                                                        id: tagslist
-                                                        /* ListElement {title: "Haskell" } */
-                                                        /* ListElement {title: "Go" } */
-                                                        /* ListElement {title: "Tempus" } */
+                                                    model: tags
+                                                    /* model: ["apples"] */
+                                                    /* model: ListModel { */
+                                                    /*     id: tagslist */
+                                                    /*     /\* ListElement {title: "Haskell" } *\/ */
+                                                    /*     /\* ListElement {title: "Go" } *\/ */
+                                                    /*     /\* ListElement {title: "Tempus" } *\/ */
 
-                                                    }
+                                                    /* } */
 
                                                     Rectangle {
                                                         height: 20
